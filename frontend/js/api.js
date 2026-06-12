@@ -174,6 +174,15 @@ const APIHelper = {
         });
     },
 
+    forgotPassword: (email, newPassword) => {
+        return APIHelper.request({
+            url: '/auth/forgot-password',
+            type: 'PUT',
+            noAuth: true,
+            data: { email, newPassword }
+        });
+    },
+
     refreshToken: () => {
         if (APIHelper.isRefreshing) {
             return new Promise((resolve) => {

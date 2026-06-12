@@ -81,15 +81,26 @@
         }
 
         /* Toggle modes */
-        .auth-card #signup-section {
+        .auth-card #signup-section,
+        .auth-card #forgot-section {
             display: none;
         }
 
-        .auth-card.signup-mode #login-section {
+        .auth-card.signup-mode #login-section,
+        .auth-card.signup-mode #forgot-section {
             display: none;
         }
 
         .auth-card.signup-mode #signup-section {
+            display: block;
+        }
+
+        .auth-card.forgot-mode #login-section,
+        .auth-card.forgot-mode #signup-section {
+            display: none;
+        }
+
+        .auth-card.forgot-mode #forgot-section {
             display: block;
         }
     </style>
@@ -115,7 +126,10 @@
                         <input type="email" id="login-email" class="form-control" placeholder="name@hospital.com" required>
                     </div>
                     <div class="form-group">
-                        <label class="required" for="login-password">Password</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="required" for="login-password" style="margin-bottom: 0;">Password</label>
+                            <a onclick="$('#auth-card-panel').addClass('forgot-mode').removeClass('signup-mode')" style="font-size: 0.8rem; color: var(--primary-color); font-weight: 600; cursor: pointer; text-decoration: none;">Forgot Password?</a>
+                        </div>
                         <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
                     </div>
                     <button type="submit" class="btn btn-primary w-100" style="margin-top: 10px;">
@@ -124,7 +138,7 @@
                 </form>
                 <div class="form-switcher">
                     <span>New to the portal?</span>
-                    <a onclick="$('#auth-card-panel').addClass('signup-mode')">Create an account</a>
+                    <a onclick="$('#auth-card-panel').addClass('signup-mode').removeClass('forgot-mode')">Create an account</a>
                 </div>
             </div>
 
@@ -169,7 +183,36 @@
                 </form>
                 <div class="form-switcher">
                     <span>Already have an account?</span>
-                    <a onclick="$('#auth-card-panel').removeClass('signup-mode')">Sign in instead</a>
+                    <a onclick="$('#auth-card-panel').removeClass('signup-mode forgot-mode')">Sign in instead</a>
+                </div>
+            </div>
+
+            <!-- Forgot Password Section -->
+            <div id="forgot-section">
+                <div class="auth-header">
+                    <h2>Reset Password</h2>
+                    <p>Enter email and set your new password</p>
+                </div>
+                <form id="forgot-form">
+                    <div class="form-group">
+                        <label class="required" for="forgot-email">Email Address</label>
+                        <input type="email" id="forgot-email" class="form-control" placeholder="name@hospital.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required" for="forgot-password">New Password</label>
+                        <input type="password" id="forgot-password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required" for="forgot-confirm-password">Confirm New Password</label>
+                        <input type="password" id="forgot-confirm-password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" style="margin-top: 10px;">
+                        <span>Reset Password</span> <i class="fas fa-key"></i>
+                    </button>
+                </form>
+                <div class="form-switcher">
+                    <span>Remembered your password?</span>
+                    <a onclick="$('#auth-card-panel').removeClass('signup-mode forgot-mode')">Sign in instead</a>
                 </div>
             </div>
         </div>

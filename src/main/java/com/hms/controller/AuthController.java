@@ -12,6 +12,7 @@ import com.hms.dto.RefreshTokenRequest;
 import com.hms.dto.SignupRequest;
 import com.hms.dto.TokenResponse;
 import com.hms.dto.UserProfileResponse;
+import com.hms.dto.ForgotPasswordRequest;
 import com.hms.entity.RefreshToken;
 import com.hms.entity.User;
 import com.hms.service.AuthService;
@@ -123,5 +124,16 @@ public class AuthController {
         );
 
         return ResponseEntity.ok(profile);
+    }
+
+    @PutMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        String result = authService.updatePassword(request.getEmail(), request.getNewPassword());
+
+        if ("USER_NOT_FOUND".equals(result)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No user found with this email address");
+        }
+
+        return ResponseEntity.ok("Password updated successfully");
     }
 }

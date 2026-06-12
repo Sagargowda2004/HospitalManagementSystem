@@ -80,4 +80,14 @@ public class AuthService {
     public User getUserProfile(String email) {
         return userRepository.findByEmail(email);
     }
+
+    public String updatePassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            return "USER_NOT_FOUND";
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return "SUCCESS";
+    }
 }
