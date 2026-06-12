@@ -1,6 +1,13 @@
+function requireAuth() {
+    return AuthGuard.check();
+}
+
 // Dashboard dynamic data loader
 const Dashboard = {
     init: () => {
+         if (!requireAuth()) {
+                return;
+            }
         const role = APIHelper.getUserRole();
         const email = APIHelper.getUserEmail();
 
@@ -60,6 +67,11 @@ const Dashboard = {
         }).catch(err => {
             console.error("Admin stats failed to load: ", err);
             showToast('Error loading system stats', 'danger');
+            $('#stat-total-appointments').text('Err');
+            $('#stat-active-departments').text('Err');
+            $('#stat-total-doctors').text('Err');
+            $('#stat-total-revenue').text('Err');
+            $('#admin-recent-appointments-body').html(`<tr><td colspan="4" class="text-center text-danger">Failed to load recent appointments.</td></tr>`);
         });
     },
 
@@ -71,7 +83,7 @@ const Dashboard = {
         console.log("Email:", email);
         console.log("Role: DOCTOR");
 
-        if (!profileId || profileId === 'null') {
+        if (!profileId || profileId === 'null' || profileId === 'undefined') {
             console.log("Profile ID missing on load. Initializing doctor profile...");
             currentDoc = await ProfileManager.initializeDoctorProfile();
             if (currentDoc) {
@@ -79,10 +91,13 @@ const Dashboard = {
             }
         }
 
-        if (!profileId || profileId === 'null') {
+        if (!profileId || profileId === 'null' || profileId === 'undefined') {
             console.log("Profile ID still missing after initialization");
             $('#doctor-assigned-id-lbl').text('Warning: Profile mismatch').removeClass('badge-primary').addClass('badge-danger');
-            $('#doctor-appointments-body').html(`<tr><td colspan="5" class="text-center">Doctor profile record not found. Please contact admin.</td></tr>`);
+            $('#doctor-appointments-body').html(`<tr><td colspan="5" class="text-center">Doctor profile not found. Please contact administrator.</td></tr>`);
+            $('#doctor-stat-appointments').text('Err');
+            $('#doctor-stat-records').text('Err');
+            $('#doctor-stat-prescriptions').text('Err');
             return;
         }
 
@@ -91,7 +106,7 @@ const Dashboard = {
         // Fetch doctor info to update label
         try {
             if (!currentDoc) {
-                currentDoc = await APIHelper.getDoctorProfile(profileId);
+                currentDoc = await APIHelper.getMyDoctorProfile();
             }
             if (currentDoc && currentDoc.user) {
                 $('#doctor-assigned-id-lbl').text(`Practitioner: ${currentDoc.user.name} | Spec: ${currentDoc.specialization}`);
@@ -106,8 +121,8 @@ const Dashboard = {
         // Load appointments, records and prescriptions in parallel
         return Promise.all([
             APIHelper.getDoctorAppointments(profileId).catch(() => []),
-            APIHelper.getMedicalRecords().catch(() => []),
-            APIHelper.getPrescriptions().catch(() => [])
+            APIHelper.getDoctorMedicalRecords(profileId).catch(() => []),
+            APIHelper.getDoctorPrescriptions(profileId).catch(() => [])
         ]).then(([appointments, records, prescriptions]) => {
             // Set stats counts
             $('#doctor-stat-appointments').text(appointments.length);
@@ -160,6 +175,9 @@ const Dashboard = {
         }).catch(err => {
             console.error(err);
             $('#doctor-appointments-body').html(`<tr><td colspan="5" class="text-center text-danger">Unable to load records. Please try again.</td></tr>`);
+            $('#doctor-stat-appointments').text('Err');
+            $('#doctor-stat-records').text('Err');
+            $('#doctor-stat-prescriptions').text('Err');
             showToast('Failed to load doctor dashboard stats', 'danger');
         });
     },
@@ -202,7 +220,7 @@ const Dashboard = {
         console.log("Email:", email);
         console.log("Role: PATIENT");
 
-        if (!profileId || profileId === 'null') {
+        if (!profileId || profileId === 'null' || profileId === 'undefined') {
             console.log("Profile ID missing on load. Initializing patient profile...");
             currentPatient = await ProfileManager.initializePatientProfile();
             if (currentPatient) {
@@ -210,9 +228,13 @@ const Dashboard = {
             }
         }
 
-        if (!profileId || profileId === 'null') {
+        if (!profileId || profileId === 'null' || profileId === 'undefined') {
             console.log("Profile ID still missing after initialization");
             $('#patient-appointments-body').html(`<tr><td colspan="4" class="text-center text-danger">Patient profile matching login not found. Please contact receptionist.</td></tr>`);
+            $('#patient-stat-appointments').text('Err');
+            $('#patient-stat-prescriptions').text('Err');
+            $('#patient-stat-balance').text('Err');
+            $('#patient-bills-body').html(`<tr><td colspan="4" class="text-center text-danger">Patient profile not found.</td></tr>`);
             return;
         }
 
@@ -280,6 +302,10 @@ const Dashboard = {
         }).catch(err => {
             console.error(err);
             $('#patient-appointments-body').html(`<tr><td colspan="4" class="text-center text-danger">Unable to load records.</td></tr>`);
+            $('#patient-bills-body').html(`<tr><td colspan="4" class="text-center text-danger">Unable to load billing records.</td></tr>`);
+            $('#patient-stat-appointments').text('Err');
+            $('#patient-stat-prescriptions').text('Err');
+            $('#patient-stat-balance').text('Err');
             showToast('Failed to load patient records', 'danger');
         });
     },
@@ -321,11 +347,19 @@ const Dashboard = {
         }).catch(err => {
             console.error("Receptionist stats failed to load: ", err);
             showToast('Error loading front desk stats', 'danger');
+            $('#receptionist-stat-appointments').text('Err');
+            $('#receptionist-stat-patients').text('Err');
+            $('#receptionist-stat-bills').text('Err');
+            $('#receptionist-appointments-body').html(`<tr><td colspan="4" class="text-center text-danger">Failed to load appointments.</td></tr>`);
         });
     }
 };
 
 $(document).ready(function() {
+    if (!AuthGuard.check()) {
+        return;
+    }
+
     Dashboard.init();
     Dashboard.initConsultationSubmit();
 });

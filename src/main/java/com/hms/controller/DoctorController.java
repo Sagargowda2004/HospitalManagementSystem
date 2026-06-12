@@ -1,8 +1,13 @@
 package com.hms.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
+import com.hms.dto.DoctorCreateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hms.entity.DoctorProfile;
+import com.hms.dto.DoctorProfileResponse;
 import com.hms.service.DoctorService;
 
 @RestController
@@ -24,7 +30,7 @@ public class DoctorController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/add")
-    public DoctorProfile addDoctor(@RequestBody DoctorProfile doctor) {
+    public DoctorProfile addDoctor(@RequestBody DoctorCreateRequest doctor) {
         return service.createDoctor(doctor);
     }
 
@@ -36,11 +42,26 @@ public class DoctorController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN','DOCTOR')")
     @GetMapping("/me")
-    public DoctorProfile getDoctorMe(org.springframework.security.core.Authentication authentication) {
+    public ResponseEntity<?> getDoctorMe(org.springframework.security.core.Authentication authentication) {
         if (authentication == null) {
-            return null;
+            Map<String, String> err = new HashMap<>();
+            err.put("error", "Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(err);
         }
-        return service.getDoctorByUserEmail(authentication.getName());
+        DoctorProfile doc = service.getDoctorByUserEmail(authentication.getName());
+        if (doc == null) {
+            Map<String, String> err = new HashMap<>();
+            err.put("error", "Doctor profile not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
+        }
+        DoctorProfileResponse resp = new DoctorProfileResponse(
+            doc.getId(),
+            doc.getUser().getEmail(),
+            doc.getUser().getName(),
+            doc.getSpecialization(),
+            doc.getExperience()
+        );
+        return ResponseEntity.ok(resp);
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','DOCTOR')")

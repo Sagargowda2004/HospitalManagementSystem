@@ -31,6 +31,7 @@ const Departments = {
             Departments.renderTable(res);
         }).catch(err => {
             showToast('Failed to load departments', 'danger');
+            $('#departments-table-body').html(`<tr><td colspan="7" class="text-center text-danger">Failed to load departments list. Please contact administrator.</td></tr>`);
         });
     },
 
@@ -151,6 +152,10 @@ const Departments = {
 };
 
 $(document).ready(function() {
+    if (!AuthGuard.check()) {
+        return;
+    }
+
     if ($('#departments-table-body').length) {
         Departments.init();
     }

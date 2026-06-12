@@ -1,3 +1,6 @@
+function requireAuth() {
+    return AuthGuard.check();
+}
 // Bills & Payments Controller
 const Bills = {
     list: [],
@@ -68,6 +71,7 @@ const Bills = {
             Bills.renderTable(res);
         }).catch(err => {
             showToast('Failed to load billing invoices', 'danger');
+            $('#bills-table-body').html(`<tr><td colspan="8" class="text-center text-danger">Failed to load billing invoices. Please contact administrator.</td></tr>`);
         });
     },
 
@@ -326,6 +330,10 @@ const Bills = {
 };
 
 $(document).ready(function() {
+    if (!AuthGuard.check()) {
+        return;
+    }
+
     if ($('#bills-table-body').length) {
         Bills.init();
     }
