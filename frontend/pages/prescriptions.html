@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Prescriptions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+    <div id="app-layout-root">
+        <div class="view-header">
+            <div class="view-title">
+                <h1>Prescriptions List</h1>
+                <p>Track medicine intakes, dosage instructions, duration, and active prescription records.</p>
+            </div>
+            <div class="view-actions">
+                <button class="btn btn-primary role-only" id="doctor-add-rx-btn" style="display:none;"><i class="fas fa-pills"></i> Write Prescription</button>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px;" class="form-row">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="filter-rx-search">Search by Medicine / Patient Name</label>
+                    <input type="text" id="filter-rx-search" class="form-control" placeholder="Search medicine names...">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="filter-rx-status">Status</label>
+                    <select id="filter-rx-status" class="form-control">
+                        <option value="">All Statuses</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="CANCELLED">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0; display:flex; align-items:flex-end;">
+                    <button class="btn btn-secondary w-100" id="btn-clear-rx-filters"><i class="fas fa-undo"></i> Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prescriptions Table -->
+        <div class="card">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Rx ID</th>
+                            <th>Patient</th>
+                            <th>Medicine & Dosage</th>
+                            <th>Frequency / Duration</th>
+                            <th>Special Instructions</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prescriptions-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center"><div class="spinner" style="margin: 20px auto;"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Create/Edit Prescription Modal -->
+        <div class="modal-overlay" id="rx-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-rx-title">Write Prescription</h2>
+                    <button class="modal-close" onclick="closeModal('rx-modal')">&times;</button>
+                </div>
+                <form id="rx-form">
+                    <input type="hidden" id="rx-edit-id">
+                    <div class="modal-body">
+                        <!-- Patient and Medical Record Link -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" for="rx-patient-select">Patient Profile</label>
+                                <select id="rx-patient-select" class="form-control" required>
+                                    <option value="" disabled selected>Select Patient</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="rx-record-select">Medical Diagnosis ID</label>
+                                <select id="rx-record-select" class="form-control" required>
+                                    <option value="" disabled selected>Select Diagnosis</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Medicine Details -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" for="rx-med-name">Medicine Name</label>
+                                <input type="text" id="rx-med-name" class="form-control" placeholder="e.g. Amoxicillin" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="rx-dosage">Dosage Amount</label>
+                                <input type="text" id="rx-dosage" class="form-control" placeholder="e.g. 500mg" required>
+                            </div>
+                        </div>
+
+                        <!-- Intake frequencies -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" for="rx-frequency">Frequency</label>
+                                <select id="rx-frequency" class="form-control" required>
+                                    <option value="Once daily">Once daily</option>
+                                    <option value="Twice daily">Twice daily</option>
+                                    <option value="Three times daily">Three times daily</option>
+                                    <option value="Four times daily">Four times daily</option>
+                                    <option value="Every 4 hours">Every 4 hours</option>
+                                    <option value="As needed">As needed (PRN)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="rx-duration">Duration</label>
+                                <input type="text" id="rx-duration" class="form-control" placeholder="e.g. 7 days" required>
+                            </div>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="form-group">
+                            <label for="rx-instructions">Intake Instructions</label>
+                            <textarea id="rx-instructions" class="form-control" rows="2" placeholder="Take with food, drink plenty of water, avoid dairy, etc."></textarea>
+                        </div>
+
+                        <!-- Status (For editing) -->
+                        <div class="form-group" id="rx-status-group" style="display:none;">
+                            <label for="rx-status">Prescription Status</label>
+                            <select id="rx-status" class="form-control">
+                                <option value="ACTIVE">Active</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('rx-modal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Prescription</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script assets -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
+    
+    <script>
+        const Prescriptions = {
+            list: [],
+            patients: [],
+            records: [],
+
+            init: () => {
+                const role = APIHelper.getUserRole();
+                if (role === 'DOCTOR') {
+                    $('#doctor-add-rx-btn').show();
+                }
+
+                // Add record button click
+                $('#doctor-add-rx-btn').on('click', () => {
+                    Prescriptions.openRxModal();
+                });
+
+                // Form submission
+                $('#rx-form').on('submit', function(e) {
+                    e.preventDefault();
+                    Prescriptions.saveRx();
+                });
+
+                // Filter controls
+                $('#filter-rx-search, #filter-rx-status').on('input change', () => {
+                    Prescriptions.applyFilters();
+                });
+
+                $('#btn-clear-rx-filters').on('click', () => {
+                    $('#filter-rx-search').val('');
+                    $('#filter-rx-status').val('');
+                    Prescriptions.applyFilters();
+                });
+
+                // On patient dropdown change, load records for that patient
+                $('#rx-patient-select').on('change', function() {
+                    Prescriptions.populateRecordsForPatient($(this).val());
+                });
+
+                // Load initial details
+                Prescriptions.loadReferences().then(() => {
+                    Prescriptions.loadPrescriptions();
+                    
+                    // Parse query parameters
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const queryPatient = urlParams.get('patientId');
+                    const queryRecord = urlParams.get('recordId') || urlParams.get('appId'); // Fallback to appId if needed
+                    if (queryPatient) {
+                        Prescriptions.openRxModal(queryPatient, queryRecord);
+                    }
+                });
+            },
+
+            loadReferences: () => {
+                return Promise.all([
+                    APIHelper.getAllPatients().then(pats => { Prescriptions.patients = pats; }),
+                    APIHelper.getMedicalRecords().then(recs => { Prescriptions.records = recs; })
+                ]).then(() => {
+                    // Populate patients dropdown
+                    let html = '<option value="" disabled selected>Select Patient</option>';
+                    Prescriptions.patients.forEach(p => {
+                        html += `<option value="${p.id}">${p.user ? p.user.name : 'Unknown'} (ID: ${p.id})</option>`;
+                    });
+                    $('#rx-patient-select').html(html);
+                });
+            },
+
+            populateRecordsForPatient: (patientId) => {
+                // Filter medical records for patient
+                const filtered = Prescriptions.records.filter(r => r.patientId == patientId);
+                let html = '<option value="" disabled selected>Select Diagnosis</option>';
+                filtered.forEach(r => {
+                    html += `<option value="${r.id}">Record #${r.id} - ${r.diagnosis} (${new Date(r.recordDate).toLocaleDateString()})</option>`;
+                });
+                $('#rx-record-select').html(html);
+            },
+
+            loadPrescriptions: async () => {
+                $('#prescriptions-table-body').html(`<tr><td colspan="7" class="text-center"><div class="spinner" style="margin: 20px auto;"></div></td></tr>`);
+                const role = APIHelper.getUserRole();
+                let profileId = localStorage.getItem('profileId');
+                
+                console.log("Email:", APIHelper.getUserEmail());
+                console.log("Role:", role);
+
+                if (role === 'DOCTOR' && (!profileId || profileId === 'null')) {
+                    console.log("Profile ID missing for Doctor in prescriptions. Initializing...");
+                    const doc = await ProfileManager.initializeDoctorProfile();
+                    if (doc) {
+                        profileId = doc.id;
+                    }
+                } else if (role === 'PATIENT' && (!profileId || profileId === 'null')) {
+                    console.log("Profile ID missing for Patient in prescriptions. Initializing...");
+                    const patient = await ProfileManager.initializePatientProfile();
+                    if (patient) {
+                        profileId = patient.id;
+                    }
+                }
+
+                console.log("Profile ID:", profileId);
+
+                let loadPromise;
+
+                if (role === 'ADMIN') {
+                    loadPromise = APIHelper.getPrescriptions();
+                } else if (role === 'DOCTOR') {
+                    if (!profileId || profileId === 'null') {
+                        showToast("Doctor profile not found", "danger");
+                        $('#prescriptions-table-body').html(`<tr><td colspan="7" class="text-center text-danger">Doctor profile not found.<br>Please contact administrator.</td></tr>`);
+                        return;
+                    }
+                    loadPromise = APIHelper.getDoctorPrescriptions(profileId);
+                } else if (role === 'PATIENT') {
+                    if (!profileId || profileId === 'null') {
+                        showToast("Patient profile not found", "danger");
+                        $('#prescriptions-table-body').html(`<tr><td colspan="7" class="text-center text-danger">Patient profile not found.<br>Please contact receptionist.</td></tr>`);
+                        return;
+                    }
+                    loadPromise = APIHelper.getPatientPrescriptions(profileId);
+                } else {
+                    loadPromise = APIHelper.getPrescriptions();
+                }
+
+                loadPromise.then(res => {
+                    Prescriptions.list = res;
+                    Prescriptions.renderTable(res);
+                }).catch(err => {
+                    showToast('Failed to load prescriptions', 'danger');
+                    $('#prescriptions-table-body').html(`<tr><td colspan="7" class="text-center text-danger">Failed to load prescriptions.<br>Please contact administrator.</td></tr>`);
+                });
+            },
+
+            renderTable: (items) => {
+                const role = APIHelper.getUserRole();
+                let html = '';
+                if (items.length === 0) {
+                    html = `<tr><td colspan="7" class="text-center">No prescriptions found.</td></tr>`;
+                } else {
+                    items.reverse().forEach(rx => {
+                        const statusClass = rx.status === 'ACTIVE' ? 'badge-primary' : (rx.status === 'COMPLETED' ? 'badge-success' : 'badge-danger');
+                        
+                        let actionsHtml = '';
+                        if (role === 'DOCTOR') {
+                            actionsHtml = `
+                                <div style="display:flex; gap:8px;">
+                                    <button class="btn btn-secondary btn-icon" onclick="Prescriptions.openEditModal(${rx.id})" title="Edit prescription"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-danger btn-icon" onclick="Prescriptions.deleteRx(${rx.id})" title="Delete Rx"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            `;
+                        } else if (role === 'ADMIN') {
+                            actionsHtml = `
+                                <button class="btn btn-secondary btn-icon" onclick="Prescriptions.openEditModal(${rx.id})" title="Edit prescription"><i class="fas fa-edit"></i></button>
+                            `;
+                        }
+
+                        html += `
+                            <tr>
+                                <td><strong>RX-${rx.id}</strong></td>
+                                <td>
+                                    <strong>${rx.patientName || `Patient #${rx.patientId}`}</strong>
+                                    <br><small style="color:var(--text-muted);">Doctor: Dr. ${rx.doctorName}</small>
+                                </td>
+                                <td><strong>${rx.medicineName}</strong><br><small>${rx.dosage}</small></td>
+                                <td>${rx.frequency}<br><small style="color:var(--text-muted); font-weight:600;">For ${rx.duration}</small></td>
+                                <td>${rx.instructions || 'N/A'}</td>
+                                <td><span class="badge ${statusClass}">${rx.status}</span></td>
+                                <td>${actionsHtml}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                $('#prescriptions-table-body').html(html);
+            },
+
+            applyFilters: () => {
+                const query = $('#filter-rx-search').val().toLowerCase().trim();
+                const status = $('#filter-rx-status').val();
+
+                let filtered = Prescriptions.list.filter(rx => {
+                    const medName = (rx.medicineName || '').toLowerCase();
+                    const patName = (rx.patientName || '').toLowerCase();
+                    const matchesQuery = !query || medName.includes(query) || patName.includes(query);
+                    const matchesStatus = !status || rx.status === status;
+                    return matchesQuery && matchesStatus;
+                });
+                Prescriptions.renderTable(filtered);
+            },
+
+            openRxModal: (patientId = '', recordId = '') => {
+                $('#rx-form').trigger('reset');
+                $('#rx-edit-id').val('');
+                $('#rx-status-group').hide();
+                $('#modal-rx-title').text('Write Prescription');
+
+                if (patientId) {
+                    $('#rx-patient-select').val(patientId);
+                    Prescriptions.populateRecordsForPatient(patientId);
+                    if (recordId) {
+                        setTimeout(() => { $('#rx-record-select').val(recordId); }, 200);
+                    }
+                }
+                
+                openModal('rx-modal');
+            },
+
+            openEditModal: (id) => {
+                $('#rx-form').trigger('reset');
+                $('#rx-edit-id').val(id);
+                $('#rx-status-group').show();
+                $('#modal-rx-title').text(`Modify Prescription RX-${id}`);
+
+                const rx = Prescriptions.list.find(r => r.id === id);
+                if (rx) {
+                    $('#rx-patient-select').val(rx.patientId);
+                    Prescriptions.populateRecordsForPatient(rx.patientId);
+                    
+                    setTimeout(() => {
+                        $('#rx-record-select').val(rx.medicalRecordId);
+                    }, 200);
+
+                    $('#rx-med-name').val(rx.medicineName);
+                    $('#rx-dosage').val(rx.dosage);
+                    $('#rx-frequency').val(rx.frequency);
+                    $('#rx-duration').val(rx.duration);
+                    $('#rx-instructions').val(rx.instructions);
+                    $('#rx-status').val(rx.status);
+                }
+
+                openModal('rx-modal');
+            },
+
+            saveRx: () => {
+                const id = $('#rx-edit-id').val();
+                const role = APIHelper.getUserRole();
+                const patientId = $('#rx-patient-select').val();
+                const doctorId = localStorage.getItem('profileId');
+                const medicalRecordId = $('#rx-record-select').val();
+                const medicineName = $('#rx-med-name').val().trim();
+                const dosage = $('#rx-dosage').val().trim();
+                const frequency = $('#rx-frequency').val();
+                const duration = $('#rx-duration').val().trim();
+                const instructions = $('#rx-instructions').val().trim();
+                const status = id ? $('#rx-status').val() : 'ACTIVE';
+
+                if (role === 'DOCTOR' && (!doctorId || doctorId === 'null')) {
+                    showToast('Doctor profile not found. Cannot save prescription.', 'danger');
+                    return;
+                }
+
+                if (!patientId || !medicalRecordId || !medicineName || !dosage || !frequency || !duration) {
+                    showToast('Please fill out all required fields', 'danger');
+                    return;
+                }
+
+                const data = {
+                    patientId: parseInt(patientId),
+                    doctorId: parseInt(doctorId),
+                    medicalRecordId: parseInt(medicalRecordId),
+                    medicineName: medicineName,
+                    dosage: dosage,
+                    frequency: frequency,
+                    duration: duration,
+                    instructions: instructions,
+                    status: status
+                };
+
+                showLoader($('#rx-form'));
+
+                let savePromise;
+                if (id) {
+                    data.id = parseInt(id);
+                    savePromise = APIHelper.updatePrescription(id, data);
+                } else {
+                    savePromise = APIHelper.createPrescription(data);
+                }
+
+                savePromise.then(() => {
+                    showToast('Prescription saved successfully!', 'success');
+                    closeModal('rx-modal');
+                    Prescriptions.loadPrescriptions();
+                }).catch(err => {
+                    showToast(err.error || 'Failed to save prescription', 'danger');
+                }).finally(() => {
+                    hideLoader($('#rx-form'));
+                });
+            },
+
+            deleteRx: (id) => {
+                buildConfirmModal('Delete Prescription', 'Are you sure you want to permanently delete this prescription record?', () => {
+                    APIHelper.deletePrescription(id).then(() => {
+                        showToast('Prescription deleted successfully', 'success');
+                        Prescriptions.loadPrescriptions();
+                    }).catch(err => {
+                        showToast(err.error || 'Failed to delete prescription', 'danger');
+                    });
+                });
+            }
+        };
+
+        $(document).ready(function() {
+            Prescriptions.init();
+        });
+    </script>
+</body>
+</html>

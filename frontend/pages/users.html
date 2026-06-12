@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Users & Profiles Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+    <div id="app-layout-root">
+        <div class="view-header">
+            <div class="view-title">
+                <h1>Hospital Profiles Hub</h1>
+                <p>Register, list, edit, and remove doctors, patients, and desk personnel.</p>
+            </div>
+            <div class="view-actions">
+                <button class="btn btn-primary" id="btn-add-profile"><i class="fas fa-plus"></i> Add New Profile</button>
+            </div>
+        </div>
+
+        <!-- Tabs Section -->
+        <div class="tabs-container card">
+            <div class="tabs-nav">
+                <button class="tab-btn active" data-tab="doctors-pane" id="tab-btn-doctors">Doctors Profiles</button>
+                <button class="tab-btn" data-tab="patients-pane" id="tab-btn-patients">Patients Registry</button>
+                <button class="tab-btn" data-tab="receptionists-pane" id="tab-btn-receptionists">Receptionists</button>
+            </div>
+
+            <!-- Tab 1: Doctors -->
+            <div class="tab-pane active" id="doctors-pane">
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Doctor ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Specialization</th>
+                                <th>Experience</th>
+                                <th>Availability</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctors-table-body">
+                            <tr>
+                                <td colspan="7" class="text-center"><div class="spinner" style="margin: 20px auto;"></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: Patients -->
+            <div class="tab-pane" id="patients-pane">
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Age / Gender</th>
+                                <th>Phone / Address</th>
+                                <th>Assigned Doctor</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patients-table-body">
+                            <tr>
+                                <td colspan="7" class="text-center"><div class="spinner" style="margin: 20px auto;"></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 3: Receptionists -->
+            <div class="tab-pane" id="receptionists-pane">
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Staff ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Shift</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receptionists-table-body">
+                            <tr>
+                                <td colspan="5" class="text-center"><div class="spinner" style="margin: 20px auto;"></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Profile Modals -->
+        <div class="modal-overlay" id="profile-edit-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-profile-title">Add Profile Card</h2>
+                    <button class="modal-close" onclick="closeModal('profile-edit-modal')">&times;</button>
+                </div>
+                <form id="profile-edit-form">
+                    <input type="hidden" id="edit-profile-id">
+                    <div class="modal-body">
+                        <!-- Role Selection -->
+                        <div class="form-group" id="profile-role-select-group">
+                            <label class="required" for="profile-role-select">Select Profile Type</label>
+                            <select id="profile-role-select" class="form-control" required>
+                                <option value="DOCTOR">Doctor Profile</option>
+                                <option value="PATIENT" selected>Patient Profile</option>
+                                <option value="RECEPTIONIST">Receptionist Staff</option>
+                            </select>
+                        </div>
+
+                        <!-- User login parameters -->
+                        <div class="form-row" id="user-info-section">
+                            <div class="form-group">
+                                <label class="required" for="profile-user-name">Full Name</label>
+                                <input type="text" id="profile-user-name" class="form-control" placeholder="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="profile-user-email">Email Address</label>
+                                <input type="email" id="profile-user-email" class="form-control" placeholder="john@example.com" required>
+                            </div>
+                        </div>
+                        <div class="form-row" id="user-password-section">
+                            <div class="form-group">
+                                <label class="required" for="profile-user-password">Password</label>
+                                <input type="password" id="profile-user-password" class="form-control" placeholder="••••••••" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="profile-user-confirm">Confirm Password</label>
+                                <input type="password" id="profile-user-confirm" class="form-control" placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        <hr style="border:0; border-top:1px solid var(--border-color); margin:16px 0;" id="modal-divider">
+
+                        <!-- Doctor fields -->
+                        <div id="doctor-fields" style="display: none;">
+                            <div class="form-group">
+                                <label class="required" for="doc-spec">Specialization</label>
+                                <input type="text" id="doc-spec" class="form-control" placeholder="e.g. Cardiology">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="required" for="doc-exp">Years Experience</label>
+                                    <input type="number" id="doc-exp" class="form-control" placeholder="5">
+                                </div>
+                                <div class="form-group">
+                                    <label class="required" for="doc-avail">Availability Hours</label>
+                                    <input type="text" id="doc-avail" class="form-control" placeholder="e.g. 10 AM - 5 PM">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Patient fields -->
+                        <div id="patient-fields">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="required" for="pat-age">Age</label>
+                                    <input type="number" id="pat-age" class="form-control" placeholder="30">
+                                </div>
+                                <div class="form-group">
+                                    <label class="required" for="pat-gender">Gender</label>
+                                    <select id="pat-gender" class="form-control">
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="required" for="pat-phone">Phone Number</label>
+                                    <input type="text" id="pat-phone" class="form-control" placeholder="+1-234-567-8900">
+                                </div>
+                                <div class="form-group">
+                                    <label for="pat-doc">Assigned Primary Doctor</label>
+                                    <select id="pat-doc" class="form-control">
+                                        <option value="">No Doctor Assigned</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="pat-address">Residential Address</label>
+                                <input type="text" id="pat-address" class="form-control" placeholder="123 Care Lane">
+                            </div>
+                        </div>
+
+                        <!-- Receptionist fields -->
+                        <div id="receptionist-fields" style="display: none;">
+                            <div class="form-group">
+                                <label class="required" for="rep-shift">Shift Assignment</label>
+                                <select id="rep-shift" class="form-control">
+                                    <option value="morning">Morning Shift</option>
+                                    <option value="evening">Evening Shift</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('profile-edit-modal')">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Profile Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/users.js"></script>
+</body>
+</html>

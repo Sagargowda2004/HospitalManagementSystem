@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+    <div id="app-layout-root">
+        <div class="view-header">
+            <div class="view-title">
+                <h1>System Administrator Dashboard</h1>
+                <p>Welcome back! Here is an overview of the hospital system status.</p>
+            </div>
+            <div class="view-actions">
+                <a href="users.html" class="btn btn-primary"><i class="fas fa-plus"></i> Manage Users</a>
+                <a href="departments.html" class="btn btn-secondary"><i class="fas fa-hospital"></i> Manage Depts</a>
+            </div>
+        </div>
+
+        <!-- Statistics grid -->
+        <div class="card-grid">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Total Appts</h3>
+                    <p id="stat-total-appointments">-</p>
+                </div>
+                <div class="stat-icon primary">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Active Depts</h3>
+                    <p id="stat-active-departments">-</p>
+                </div>
+                <div class="stat-icon success">
+                    <i class="fas fa-hospital-user"></i>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Doctors</h3>
+                    <p id="stat-total-doctors">-</p>
+                </div>
+                <div class="stat-icon warning">
+                    <i class="fas fa-user-md"></i>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Total Income</h3>
+                    <p id="stat-total-revenue">$0</p>
+                </div>
+                <div class="stat-icon danger">
+                    <i class="fas fa-wallet"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content Grid -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; margin-top: 32px;" class="form-row">
+            <!-- Recent Appointments Table -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 1.1rem; font-weight: 700;">Recent Appointments</h2>
+                    <a href="appointments.html" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-recent-appointments-body">
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    <div class="spinner" style="margin: 20px auto;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Quick Action & System overview -->
+            <div class="card" style="display: flex; flex-direction: column; gap: 20px;">
+                <h2 style="font-size: 1.1rem; font-weight: 700;">Quick Actions</h2>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="users.html" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+                        <i class="fas fa-user-plus text-primary"></i> Register Doctor / Staff
+                    </a>
+                    <a href="bills.html" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+                        <i class="fas fa-file-invoice text-success"></i> Create New Billing Invoice
+                    </a>
+                    <a href="notifications.html" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+                        <i class="fas fa-bullhorn text-warning"></i> Send Broadcast Announcement
+                    </a>
+                </div>
+                <hr style="border: 0; border-top: 1px solid var(--border-color);">
+                <div>
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">Quick Portal Notes</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                        As system admin, you have access to create and modify departments, manage accounts for patients, doctors, and receptionist profiles, view and filter all logs, generate billing receipts and check delivery reports.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/dashboard.js"></script>
+</body>
+</html>

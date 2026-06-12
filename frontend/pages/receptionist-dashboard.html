@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Receptionist Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+    <div id="app-layout-root">
+        <div class="view-header">
+            <div class="view-title">
+                <h1>Reception & Front Desk</h1>
+                <p>Welcome back! You can register new patients, schedule appointments, and coordinate payments.</p>
+            </div>
+            <div class="view-actions">
+                <a href="users.html" class="btn btn-primary"><i class="fas fa-user-plus"></i> Patient Intake</a>
+                <a href="appointments.html" class="btn btn-secondary"><i class="fas fa-calendar-alt"></i> New Appointment</a>
+            </div>
+        </div>
+
+        <!-- Stats grid -->
+        <div class="card-grid">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Appointments</h3>
+                    <p id="receptionist-stat-appointments">-</p>
+                </div>
+                <div class="stat-icon primary">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Registered Patients</h3>
+                    <p id="receptionist-stat-patients">-</p>
+                </div>
+                <div class="stat-icon success">
+                    <i class="fas fa-hospital-user"></i>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Pending Invoices</h3>
+                    <p id="receptionist-stat-bills">-</p>
+                </div>
+                <div class="stat-icon warning">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard checklist grid -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; margin-top: 32px;" class="form-row">
+            <!-- Active Appointments Check-ins -->
+            <div class="card">
+                <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 20px;">Hospital Appointments Schedule</h2>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Doctor Assigned</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receptionist-appointments-body">
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    <div class="spinner" style="margin: 20px auto;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Reception Tasks & Reminders -->
+            <div class="card" style="display: flex; flex-direction: column; gap: 20px;">
+                <h2 style="font-size: 1.1rem; font-weight: 700;">Front Desk Actions</h2>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="users.html" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+                        <i class="fas fa-user-plus text-primary"></i> Create Patient Care Card
+                    </a>
+                    <a href="appointments.html" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+                        <i class="fas fa-calendar-plus text-success"></i> Schedule Consult Slot
+                    </a>
+                    <a href="bills.html" class="btn btn-secondary" style="justify-content: flex-start; text-align: left;">
+                        <i class="fas fa-money-check-alt text-warning"></i> Pay Bills & Process Payments
+                    </a>
+                </div>
+                <hr style="border: 0; border-top: 1px solid var(--border-color);">
+                <div>
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">Operation Directives</h3>
+                    <ul style="font-size: 0.85rem; color: var(--text-muted); list-style: disc; padding-left: 20px; line-height: 1.6;">
+                        <li>Verify patient identities upon check-in.</li>
+                        <li>Update payment status for cleared bills promptly.</li>
+                        <li>Maintain accurate receptionist shift logs.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/dashboard.js"></script>
+</body>
+</html>

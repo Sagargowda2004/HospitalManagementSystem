@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Patient Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+    <div id="app-layout-root">
+        <div class="view-header">
+            <div class="view-title">
+                <h1>Patient Care Hub</h1>
+                <p>Welcome to your health dashboard. View your scheduled visits, bills, prescriptions, and medical records.</p>
+            </div>
+            <div class="view-actions">
+                <a href="appointments.html" class="btn btn-primary"><i class="fas fa-plus"></i> Book Appointment</a>
+                <a href="bills.html" class="btn btn-secondary"><i class="fas fa-file-invoice-dollar"></i> Pay Bills</a>
+            </div>
+        </div>
+
+        <!-- Stats grid -->
+        <div class="card-grid">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>My Appointments</h3>
+                    <p id="patient-stat-appointments">-</p>
+                </div>
+                <div class="stat-icon primary">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Active Prescriptions</h3>
+                    <p id="patient-stat-prescriptions">-</p>
+                </div>
+                <div class="stat-icon warning">
+                    <i class="fas fa-pills"></i>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Outstanding Balance</h3>
+                    <p id="patient-stat-balance">$0</p>
+                </div>
+                <div class="stat-icon danger">
+                    <i class="fas fa-receipt"></i>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 32px; margin-top: 32px;" class="form-row">
+            <!-- Appointments checklist -->
+            <div class="card">
+                <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 20px;">My Appointments History</h2>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Department</th>
+                                <th>Date / Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patient-appointments-body">
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    <div class="spinner" style="margin: 20px auto;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Bills card -->
+            <div class="card">
+                <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 20px;">Outstanding Billing Invoices</h2>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Bill No</th>
+                                <th>Total</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patient-bills-body">
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    <div class="spinner" style="margin: 20px auto;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/dashboard.js"></script>
+</body>
+</html>

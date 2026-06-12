@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Billing & Invoices</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+    <div id="app-layout-root">
+        <div class="view-header">
+            <div class="view-title">
+                <h1>Hospital Invoices & Billing</h1>
+                <p>Register consultation charges, medicine fees, laboratory costs, and record payments.</p>
+            </div>
+            <div class="view-actions">
+                <button class="btn btn-primary role-only" id="admin-create-bill-btn" style="display:none;"><i class="fas fa-file-invoice-dollar"></i> Create Bill Invoice</button>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px;" class="form-row">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="filter-bill-search">Search by Invoice Number / Patient Name</label>
+                    <input type="text" id="filter-bill-search" class="form-control" placeholder="Search bills...">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="filter-bill-status">Status</label>
+                    <select id="filter-bill-status" class="form-control">
+                        <option value="">All Invoices</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="PARTIAL">Partial Payment</option>
+                        <option value="PAID">Paid In Full</option>
+                        <option value="CANCELLED">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0; display:flex; align-items:flex-end;">
+                    <button class="btn btn-secondary w-100" id="btn-clear-bill-filters"><i class="fas fa-undo"></i> Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices List Table -->
+        <div class="card">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice No</th>
+                            <th>Patient Name</th>
+                            <th>Itemized Breakdown</th>
+                            <th>Total Amt</th>
+                            <th>Paid</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bills-table-body">
+                        <tr>
+                            <td colspan="8" class="text-center"><div class="spinner" style="margin: 20px auto;"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Create/Edit Bill Modal -->
+        <div class="modal-overlay" id="bill-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-bill-title">Create Invoice</h2>
+                    <button class="modal-close" onclick="closeModal('bill-modal')">&times;</button>
+                </div>
+                <form id="bill-form">
+                    <input type="hidden" id="bill-edit-id">
+                    <div class="modal-body">
+                        <!-- Patient Select -->
+                        <div class="form-group">
+                            <label class="required" for="bill-patient-select">Patient Profile</label>
+                            <select id="bill-patient-select" class="form-control" required>
+                                <option value="" disabled selected>Select Patient</option>
+                            </select>
+                        </div>
+
+                        <!-- Itemized Charges -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" for="bill-consult-charges">Consultation Fee ($)</label>
+                                <input type="number" id="bill-consult-charges" class="form-control" min="0" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="bill-med-charges">Pharmacy/Medication ($)</label>
+                                <input type="number" id="bill-med-charges" class="form-control" min="0" value="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" for="bill-test-charges">Lab/Diagnostic Tests ($)</label>
+                                <input type="number" id="bill-test-charges" class="form-control" min="0" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="bill-other-charges">Ward/Other Charges ($)</label>
+                                <input type="number" id="bill-other-charges" class="form-control" min="0" value="0" required>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group">
+                            <label for="bill-notes">Invoice Remarks</label>
+                            <textarea id="bill-notes" class="form-control" rows="2" placeholder="Includes general checkup, blood panel test..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('bill-modal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Generate Invoice</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- View Bill Payments & Pay Modal -->
+        <div class="modal-overlay" id="payment-modal">
+            <div class="modal-content" style="max-width: 650px;">
+                <div class="modal-header">
+                    <h2>Invoice Payment Details</h2>
+                    <button class="modal-close" onclick="closeModal('payment-modal')">&times;</button>
+                </div>
+                <div class="modal-body" style="display:flex; flex-direction:column; gap:24px;">
+                    <!-- Invoice Summary Box -->
+                    <div style="background-color: var(--bg-color); padding: 20px; border-radius: var(--border-radius); border:1px solid var(--border-color);" id="payment-invoice-summary-box">
+                        <div class="spinner" style="margin:0 auto;"></div>
+                    </div>
+
+                    <!-- Payment Logs list -->
+                    <div>
+                        <h3 style="font-size:1rem; font-weight:700; margin-bottom:12px;"><i class="fas fa-receipt text-primary"></i> Previous Transaction Logs</h3>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size:0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Method</th>
+                                        <th>Transaction ID</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="payment-history-body">
+                                    <tr>
+                                        <td colspan="4" class="text-center">No transactions recorded</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Record Payment Form (Hidden for fully paid bills) -->
+                    <div id="payment-input-form-section">
+                        <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px;"><i class="fas fa-credit-card text-success"></i> Pay Invoice Balance</h3>
+                        <form id="record-payment-form">
+                            <input type="hidden" id="pay-bill-id">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="required" for="pay-amount">Amount to Pay ($)</label>
+                                    <input type="number" id="pay-amount" class="form-control" step="0.01" min="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="required" for="pay-method">Payment Method</label>
+                                    <select id="pay-method" class="form-control" required>
+                                        <option value="CARD">Credit/Debit Card</option>
+                                        <option value="CASH">Cash Payment</option>
+                                        <option value="UPI">UPI Transfer</option>
+                                        <option value="BANK_TRANSFER">Bank Direct Wire</option>
+                                        <option value="CHEQUE">Bank Cheque</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="pay-txn-id">Transaction / Reference ID</label>
+                                <input type="text" id="pay-txn-id" class="form-control" placeholder="TXN-9821389" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pay-remarks">Remarks</label>
+                                <input type="text" id="pay-remarks" class="form-control" placeholder="Optional notes...">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-check"></i> Submit Transaction</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/bills.js"></script>
+</body>
+</html>

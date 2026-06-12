@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS Healthcare - Portal Login & Registration</title>
+    
+    <!-- External stylesheet links -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #e8f0fe 0%, #ffffff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 460px;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(26, 115, 232, 0.08);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            overflow: hidden;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .auth-header p {
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-size: 0.9rem;
+        }
+
+        .form-switcher {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            gap: 6px;
+        }
+
+        .form-switcher a {
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Toggle modes */
+        .auth-card #signup-section {
+            display: none;
+        }
+
+        .auth-card.signup-mode #login-section {
+            display: none;
+        }
+
+        .auth-card.signup-mode #signup-section {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card" id="auth-card-panel">
+            <div class="auth-logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>HMS Healthcare</span>
+            </div>
+
+            <!-- Login Section -->
+            <div id="login-section">
+                <div class="auth-header">
+                    <h2>Welcome Back</h2>
+                    <p>Enter details to access your healthcare portal</p>
+                </div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="required" for="login-email">Email Address</label>
+                        <input type="email" id="login-email" class="form-control" placeholder="name@hospital.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required" for="login-password">Password</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" style="margin-top: 10px;">
+                        <span>Sign In</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+                <div class="form-switcher">
+                    <span>New to the portal?</span>
+                    <a onclick="$('#auth-card-panel').addClass('signup-mode')">Create an account</a>
+                </div>
+            </div>
+
+            <!-- Signup Section -->
+            <div id="signup-section">
+                <div class="auth-header">
+                    <h2>Get Started</h2>
+                    <p>Register a new portal account in seconds</p>
+                </div>
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label class="required" for="signup-name">Full Name</label>
+                        <input type="text" id="signup-name" class="form-control" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required" for="signup-email">Email Address</label>
+                        <input type="email" id="signup-email" class="form-control" placeholder="john@example.com" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="required" for="signup-password">Password</label>
+                            <input type="password" id="signup-password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="signup-confirm-password">Confirm Password</label>
+                            <input type="password" id="signup-confirm-password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="required" for="signup-role">Portal Role</label>
+                        <select id="signup-role" class="form-control" required>
+                            <option value="" disabled selected>Select Account Type</option>
+                            <option value="ADMIN">System Administrator</option>
+                            <option value="DOCTOR">Medical Practitioner (Doctor)</option>
+                            <option value="PATIENT">Patient Profile</option>
+                            <option value="RECEPTIONIST">Reception Desk Operator</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" style="margin-top: 10px;">
+                        <span>Register</span> <i class="fas fa-user-plus"></i>
+                    </button>
+                </form>
+                <div class="form-switcher">
+                    <span>Already have an account?</span>
+                    <a onclick="$('#auth-card-panel').removeClass('signup-mode')">Sign in instead</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Script imports -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

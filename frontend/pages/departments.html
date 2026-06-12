@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Departments</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+    <div id="app-layout-root">
+        <div class="view-header">
+            <div class="view-title">
+                <h1>Hospital Departments</h1>
+                <p>Browse active departments, head of services, and desk contact records.</p>
+            </div>
+            <div class="view-actions">
+                <button class="btn btn-primary role-only" id="admin-add-dept-btn" style="display:none;"><i class="fas fa-plus"></i> Create Department</button>
+            </div>
+        </div>
+
+        <!-- Departments List Table -->
+        <div class="card">
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Dept ID</th>
+                            <th>Department Name</th>
+                            <th>Description</th>
+                            <th>Contact Extension</th>
+                            <th>Head of Department</th>
+                            <th>Service Status</th>
+                            <th class="dept-action-header" style="display:none;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="departments-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center"><div class="spinner" style="margin: 20px auto;"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Create/Edit Department Modal -->
+        <div class="modal-overlay" id="department-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-dept-title">Create Hospital Department</h2>
+                    <button class="modal-close" onclick="closeModal('department-modal')">&times;</button>
+                </div>
+                <form id="department-form">
+                    <input type="hidden" id="dept-edit-id">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="required" for="dept-name">Department Name</label>
+                            <input type="text" id="dept-name" class="form-control" placeholder="e.g. Cardiology" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="dept-desc">Description</label>
+                            <textarea id="dept-desc" class="form-control" rows="3" placeholder="Primary heart disease diagnostics and surgery services..." required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" for="dept-phone">Contact Phone / Ext</label>
+                                <input type="text" id="dept-phone" class="form-control" placeholder="+1-800-123-4567" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="dept-head">Head of Department (HOD)</label>
+                                <input type="text" id="dept-head" class="form-control" placeholder="Dr. Sarah Johnson" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="dept-active">Active Service Status</label>
+                            <select id="dept-active" class="form-control">
+                                <option value="true">Active Operational</option>
+                                <option value="false">Temporarily Disabled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('department-modal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Department</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/departments.js"></script>
+</body>
+</html>

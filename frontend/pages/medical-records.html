@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Medical Records</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+    <div id="app-layout-root">
+        <div class="view-header">
+            <div class="view-title">
+                <h1>Patient Medical History</h1>
+                <p>Track check-ups, vital signs, physical diagnostics, and treatment recommendations.</p>
+            </div>
+            <div class="view-actions">
+                <button class="btn btn-primary role-only" id="doctor-add-record-btn" style="display:none;"><i class="fas fa-file-medical"></i> Add Diagnosis Record</button>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="form-row">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="filter-record-search">Search by Diagnosis / Patient Name</label>
+                    <input type="text" id="filter-record-search" class="form-control" placeholder="Search records...">
+                </div>
+                <div class="form-group" style="margin-bottom:0; display:flex; align-items:flex-end;">
+                    <button class="btn btn-secondary w-100" id="btn-clear-record-filters"><i class="fas fa-undo"></i> Clear Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Records Grid or List -->
+        <div style="display: flex; flex-direction: column; gap: 24px;" id="medical-records-list-container">
+            <!-- Loading state -->
+            <div class="card text-center"><div class="spinner" style="margin:20px auto;"></div></div>
+        </div>
+
+        <!-- Create/Edit Medical Record Modal -->
+        <div class="modal-overlay" id="record-modal">
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h2 id="modal-record-title">Create Medical Record</h2>
+                    <button class="modal-close" onclick="closeModal('record-modal')">&times;</button>
+                </div>
+                <form id="record-form">
+                    <input type="hidden" id="record-edit-id">
+                    <div class="modal-body">
+                        <!-- Patient & Appointment (Doctor sets) -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" for="record-patient-select">Patient Profile</label>
+                                <select id="record-patient-select" class="form-control" required>
+                                    <option value="" disabled selected>Select Patient</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="record-app-select">Related Appointment ID</label>
+                                <select id="record-app-select" class="form-control" required>
+                                    <option value="" disabled selected>Select Appointment Slot</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Vital Signs Row 1 -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label class="required" for="record-bp">Blood Pressure (mmHg)</label>
+                                <input type="text" id="record-bp" class="form-control" placeholder="120/80" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="record-temp">Temperature (°F)</label>
+                                <input type="text" id="record-temp" class="form-control" placeholder="98.6" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="record-hr">Heart Rate (bpm)</label>
+                                <input type="text" id="record-hr" class="form-control" placeholder="72" required>
+                            </div>
+                        </div>
+
+                        <!-- Vital Signs Row 2 -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required" for="record-weight">Weight (kg)</label>
+                                <input type="text" id="record-weight" class="form-control" placeholder="70" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required" for="record-height">Height (cm)</label>
+                                <input type="text" id="record-height" class="form-control" placeholder="175" required>
+                            </div>
+                        </div>
+
+                        <hr style="border:0; border-top:1px solid var(--border-color); margin:16px 0;">
+
+                        <!-- Diagnosis -->
+                        <div class="form-group">
+                            <label class="required" for="record-diagnosis">Clinical Diagnosis</label>
+                            <input type="text" id="record-diagnosis" class="form-control" placeholder="Acute Bronchitis" required>
+                        </div>
+
+                        <!-- Treatment plan -->
+                        <div class="form-group">
+                            <label class="required" for="record-treatment">Treatment Plan & Meds</label>
+                            <textarea id="record-treatment" class="form-control" rows="3" placeholder="Meds prescribed, home rest, hydration, etc." required></textarea>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group">
+                            <label for="record-notes">Doctor Notes / Observation Details</label>
+                            <textarea id="record-notes" class="form-control" rows="3" placeholder="Follow-up check requested in 2 weeks..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('record-modal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Diagnosis Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script assets -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
+    
+    <!-- We will write medical-records and prescriptions js inside app code or separate files -->
+    <script>
+        // Inline code or simple binding to handle Medical Records
+        const MedicalRecords = {
+            list: [],
+            patients: [],
+            appointments: [],
+
+            init: () => {
+                const role = APIHelper.getUserRole();
+                if (role === 'DOCTOR') {
+                    $('#doctor-add-record-btn').show();
+                }
+
+                // Add record button click
+                $('#doctor-add-record-btn').on('click', () => {
+                    MedicalRecords.openRecordModal();
+                });
+
+                // Form submission
+                $('#record-form').on('submit', function(e) {
+                    e.preventDefault();
+                    MedicalRecords.saveRecord();
+                });
+
+                // Filter controls
+                $('#filter-record-search').on('input', () => {
+                    MedicalRecords.applyFilters();
+                });
+
+                $('#btn-clear-record-filters').on('click', () => {
+                    $('#filter-record-search').val('');
+                    MedicalRecords.applyFilters();
+                });
+
+                // On patient dropdown change, populate appointments dropdown for that patient
+                $('#record-patient-select').on('change', function() {
+                    MedicalRecords.populateAppointmentsForPatient($(this).val());
+                });
+
+                // Load initial details
+                MedicalRecords.loadReferences().then(() => {
+                    MedicalRecords.loadRecords();
+                    
+                    // Parse query parameters
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const queryPatient = urlParams.get('patientId');
+                    const queryApp = urlParams.get('appId');
+                    if (queryPatient && queryApp) {
+                        MedicalRecords.openRecordModal(queryPatient, queryApp);
+                    }
+                });
+            },
+
+            loadReferences: () => {
+                const role = APIHelper.getUserRole();
+                
+                // Fetch patients & appointments reference
+                return Promise.all([
+                    APIHelper.getAllPatients().then(pats => { MedicalRecords.patients = pats; }),
+                    APIHelper.getAppointments().then(apps => { MedicalRecords.appointments = apps; })
+                ]).then(() => {
+                    // Populate patients dropdown
+                    let html = '<option value="" disabled selected>Select Patient</option>';
+                    MedicalRecords.patients.forEach(p => {
+                        html += `<option value="${p.id}">${p.user ? p.user.name : 'Unknown'} (ID: ${p.id})</option>`;
+                    });
+                    $('#record-patient-select').html(html);
+                });
+            },
+
+            populateAppointmentsForPatient: (patientId) => {
+                // Filter appointments for the selected patient
+                const filtered = MedicalRecords.appointments.filter(a => a.patientId == patientId);
+                let html = '<option value="" disabled selected>Select Appointment Slot</option>';
+                filtered.forEach(a => {
+                    html += `<option value="${a.id}">Appt #${a.id} on ${new Date(a.appointmentDate).toLocaleDateString()} with Dr. ${a.doctorName}</option>`;
+                });
+                $('#record-app-select').html(html);
+            },
+
+            loadRecords: async () => {
+                $('#medical-records-list-container').html('<div class="card text-center"><div class="spinner" style="margin:20px auto;"></div></div>');
+                const role = APIHelper.getUserRole();
+                let profileId = localStorage.getItem('profileId');
+                
+                console.log("Email:", APIHelper.getUserEmail());
+                console.log("Role:", role);
+
+                if (role === 'DOCTOR' && (!profileId || profileId === 'null')) {
+                    console.log("Profile ID missing for Doctor in medical records. Initializing...");
+                    const doc = await ProfileManager.initializeDoctorProfile();
+                    if (doc) {
+                        profileId = doc.id;
+                    }
+                } else if (role === 'PATIENT' && (!profileId || profileId === 'null')) {
+                    console.log("Profile ID missing for Patient in medical records. Initializing...");
+                    const patient = await ProfileManager.initializePatientProfile();
+                    if (patient) {
+                        profileId = patient.id;
+                    }
+                }
+
+                console.log("Profile ID:", profileId);
+
+                let loadPromise;
+
+                if (role === 'ADMIN') {
+                    loadPromise = APIHelper.getMedicalRecords();
+                } else if (role === 'DOCTOR') {
+                    if (!profileId || profileId === 'null') {
+                        showToast("Doctor profile not found", "danger");
+                        $('#medical-records-list-container').html(`
+                            <div class="card text-center text-danger" style="padding: 20px;">
+                                Doctor profile not found. Please contact administrator.
+                            </div>
+                        `);
+                        return;
+                    }
+                    loadPromise = APIHelper.getDoctorMedicalRecords(profileId);
+                } else if (role === 'PATIENT') {
+                    if (!profileId || profileId === 'null') {
+                        showToast("Patient profile not found", "danger");
+                        $('#medical-records-list-container').html(`
+                            <div class="card text-center text-danger" style="padding: 20px;">
+                                Patient profile not found. Please contact receptionist.
+                            </div>
+                        `);
+                        return;
+                    }
+                    loadPromise = APIHelper.getPatientMedicalRecords(profileId);
+                } else {
+                    loadPromise = APIHelper.getMedicalRecords();
+                }
+
+                loadPromise.then(res => {
+                    MedicalRecords.list = res;
+                    MedicalRecords.renderRecords(res);
+                }).catch(err => {
+                    showToast('Failed to load medical records', 'danger');
+                    $('#medical-records-list-container').html(`
+                        <div class="card text-center text-danger" style="padding: 20px;">
+                            Failed to load medical records. Please try again.
+                        </div>
+                    `);
+                });
+            },
+
+            renderRecords: (items) => {
+                const role = APIHelper.getUserRole();
+                let html = '';
+                if (items.length === 0) {
+                    html = `
+                        <div class="empty-state">
+                            <i class="fas fa-notes-medical"></i>
+                            <h3>No Medical Records Found</h3>
+                            <p>There are no diagnostic records matching your search or profile.</p>
+                        </div>
+                    `;
+                } else {
+                    items.reverse().forEach(rec => {
+                        const formattedDate = new Date(rec.recordDate || Date.now()).toLocaleDateString();
+                        
+                        let actionsHtml = '';
+                        if (role === 'DOCTOR') {
+                            actionsHtml = `
+                                <div style="display:flex; gap:10px;">
+                                    <button class="btn btn-secondary" onclick="MedicalRecords.openEditModal(${rec.id})" style="padding: 6px 12px; font-size: 0.8rem;"><i class="fas fa-edit"></i> Edit</button>
+                                    <button class="btn btn-danger" onclick="MedicalRecords.deleteRecord(${rec.id})" style="padding: 6px 12px; font-size: 0.8rem;"><i class="fas fa-trash-alt"></i> Delete</button>
+                                </div>
+                            `;
+                        }
+
+                        html += `
+                            <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                                    <div>
+                                        <h3 style="font-size:1.15rem; font-weight:700;">Diagnosis: ${rec.diagnosis}</h3>
+                                        <p style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">
+                                            Patient: <strong>${rec.patientName || `Patient #${rec.patientId}`}</strong> | Doctor: <strong>Dr. ${rec.doctorName || `Doctor #${rec.doctorId}`}</strong> | Date: <strong>${formattedDate}</strong>
+                                        </p>
+                                    </div>
+                                    ${actionsHtml}
+                                </div>
+                                <hr style="border:0; border-top:1px solid var(--border-color);">
+                                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:16px; background-color:var(--bg-color); padding:16px; border-radius:var(--border-radius);">
+                                    <div><small style="color:var(--text-muted)">Blood Pressure</small><br><strong>${rec.bloodPressure} mmHg</strong></div>
+                                    <div><small style="color:var(--text-muted)">Temperature</small><br><strong>${rec.temperature} °F</strong></div>
+                                    <div><small style="color:var(--text-muted)">Heart Rate</small><br><strong>${rec.heartRate} bpm</strong></div>
+                                    <div><small style="color:var(--text-muted)">Weight</small><br><strong>${rec.weight} kg</strong></div>
+                                    <div><small style="color:var(--text-muted)">Height</small><br><strong>${rec.height} cm</strong></div>
+                                </div>
+                                <div>
+                                    <h4 style="font-size:0.95rem; font-weight:600; margin-bottom:4px;">Treatment Recommendation</h4>
+                                    <p style="font-size:0.9rem; color:var(--text-color);">${rec.treatment}</p>
+                                </div>
+                                ${rec.notes ? `
+                                <div>
+                                    <h4 style="font-size:0.95rem; font-weight:600; margin-bottom:4px; color:var(--text-muted);">Observations & Follow-Up</h4>
+                                    <p style="font-size:0.9rem; color:var(--text-muted);">${rec.notes}</p>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                }
+                $('#medical-records-list-container').html(html);
+            },
+
+            applyFilters: () => {
+                const query = $('#filter-record-search').val().toLowerCase().trim();
+                let filtered = MedicalRecords.list.filter(rec => {
+                    const diagnosis = (rec.diagnosis || '').toLowerCase();
+                    const patientName = (rec.patientName || '').toLowerCase();
+                    const treatment = (rec.treatment || '').toLowerCase();
+                    return !query || diagnosis.includes(query) || patientName.includes(query) || treatment.includes(query);
+                });
+                MedicalRecords.renderRecords(filtered);
+            },
+
+            openRecordModal: (patientId = '', appId = '') => {
+                $('#record-form').trigger('reset');
+                $('#record-edit-id').val('');
+                $('#modal-record-title').text('Create Medical Record');
+
+                if (patientId) {
+                    $('#record-patient-select').val(patientId);
+                    MedicalRecords.populateAppointmentsForPatient(patientId);
+                    if (appId) {
+                        setTimeout(() => { $('#record-app-select').val(appId); }, 200);
+                    }
+                }
+                
+                openModal('record-modal');
+            },
+
+            openEditModal: (id) => {
+                $('#record-form').trigger('reset');
+                $('#record-edit-id').val(id);
+                $('#modal-record-title').text(`Edit Diagnosis Record #${id}`);
+
+                const rec = MedicalRecords.list.find(r => r.id === id);
+                if (rec) {
+                    $('#record-patient-select').val(rec.patientId);
+                    MedicalRecords.populateAppointmentsForPatient(rec.patientId);
+                    
+                    setTimeout(() => {
+                        $('#record-app-select').val(rec.appointmentId);
+                    }, 200);
+
+                    $('#record-bp').val(rec.bloodPressure);
+                    $('#record-temp').val(rec.temperature);
+                    $('#record-hr').val(rec.heartRate);
+                    $('#record-weight').val(rec.weight);
+                    $('#record-height').val(rec.height);
+                    $('#record-diagnosis').val(rec.diagnosis);
+                    $('#record-treatment').val(rec.treatment);
+                    $('#record-notes').val(rec.notes);
+                }
+
+                openModal('record-modal');
+            },
+
+            saveRecord: () => {
+                const id = $('#record-edit-id').val();
+                const role = APIHelper.getUserRole();
+                const patientId = $('#record-patient-select').val();
+                const doctorId = localStorage.getItem('profileId'); // Assumed doctor profile ID
+                const appointmentId = $('#record-app-select').val();
+                
+                const bp = $('#record-bp').val().trim();
+                const temp = $('#record-temp').val().trim();
+                const hr = $('#record-hr').val().trim();
+                const weight = $('#record-weight').val().trim();
+                const height = $('#record-height').val().trim();
+                
+                const diagnosis = $('#record-diagnosis').val().trim();
+                const treatment = $('#record-treatment').val().trim();
+                const notes = $('#record-notes').val().trim();
+
+                if (role === 'DOCTOR' && (!doctorId || doctorId === 'null')) {
+                    showToast('Doctor profile not found. Cannot save record.', 'danger');
+                    return;
+                }
+
+                if (!patientId || !appointmentId || !bp || !temp || !hr || !weight || !height || !diagnosis || !treatment) {
+                    showToast('Please fill out all required fields', 'danger');
+                    return;
+                }
+
+                const data = {
+                    patientId: parseInt(patientId),
+                    doctorId: parseInt(doctorId),
+                    appointmentId: parseInt(appointmentId),
+                    bloodPressure: bp,
+                    temperature: temp,
+                    heartRate: hr,
+                    weight: weight,
+                    height: height,
+                    diagnosis: diagnosis,
+                    treatment: treatment,
+                    notes: notes
+                };
+
+                showLoader($('#record-form'));
+
+                let savePromise;
+                if (id) {
+                    data.id = parseInt(id);
+                    savePromise = APIHelper.updateMedicalRecord(id, data);
+                } else {
+                    savePromise = APIHelper.createMedicalRecord(data);
+                }
+
+                savePromise.then(() => {
+                    showToast('Diagnosis saved successfully!', 'success');
+                    closeModal('record-modal');
+                    MedicalRecords.loadRecords();
+                }).catch(err => {
+                    showToast(err.error || 'Failed to save record', 'danger');
+                }).finally(() => {
+                    hideLoader($('#record-form'));
+                });
+            },
+
+            deleteRecord: (id) => {
+                buildConfirmModal('Delete Medical Record', 'Are you sure you want to permanently delete this medical record?', () => {
+                    APIHelper.deleteMedicalRecord(id).then(() => {
+                        showToast('Medical record deleted successfully', 'success');
+                        MedicalRecords.loadRecords();
+                    }).catch(err => {
+                        showToast(err.error || 'Failed to delete record', 'danger');
+                    });
+                });
+            }
+        };
+
+        $(document).ready(function() {
+            MedicalRecords.init();
+        });
+    </script>
+</body>
+</html>
