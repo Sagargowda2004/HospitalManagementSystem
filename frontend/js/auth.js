@@ -148,6 +148,49 @@ const Auth = {
                     showToast(typeof err === 'string' ? err : (err.error || 'Registration failed'), 'danger');
                 });
         });
+    },
+
+    initForgot: () => {
+        const form = $('#forgot-form');
+        if (!form.length) return;
+
+        form.on('submit', function(e) {
+            e.preventDefault();
+            const email = $('#forgot-email').val().trim();
+            const password = $('#forgot-password').val();
+            const confirmPass = $('#forgot-confirm-password').val();
+
+            if (!email || !password || !confirmPass) {
+                showToast('All fields are required', 'danger');
+                return;
+            }
+
+            if (password !== confirmPass) {
+                showToast('Passwords do not match', 'danger');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters long', 'danger');
+                return;
+            }
+
+            showLoader(form);
+
+            APIHelper.forgotPassword(email, password)
+                .then(() => {
+                    showToast('Password updated successfully! Please login.', 'success');
+                    setTimeout(() => {
+                        $('.auth-card').removeClass('signup-mode forgot-mode');
+                        hideLoader(form);
+                        form.trigger('reset');
+                    }, 1500);
+                })
+                .catch(err => {
+                    hideLoader(form);
+                    showToast(typeof err === 'string' ? err : (err.error || 'Password reset failed'), 'danger');
+                });
+        });
     }
 };
 
@@ -165,6 +208,7 @@ $(document).ready(async function() {
     Auth.checkAccess();
     Auth.initLogin();
     Auth.initSignup();
+    Auth.initForgot();
 
     // Centralized Auto-Recovery Logic
     if (token && role) {
