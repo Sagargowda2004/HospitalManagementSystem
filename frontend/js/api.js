@@ -79,6 +79,18 @@ const APIHelper = {
 
     // Core AJAX request wrapper with JWT management and retry interceptors
     request: async function(options) {
+        if (!options.noAuth && typeof AuthGuard !== 'undefined' && !AuthGuard.check()) {
+            return Promise.reject({ error: 'Authentication failed' });
+        }
+
+        // Validation Layer: check for null, undefined, or NaN in the request URL path
+        const invalidParamRegex = /\/(null|undefined|NaN)(?=\/|$|\?)/;
+        if (options.url && invalidParamRegex.test(options.url)) {
+            console.warn(`[API Validation] Blocked invalid API request: ${options.url}`);
+            showToast(`Application error: Required ID is missing for request.`, 'danger');
+            return Promise.reject({ error: 'Blocked invalid API request due to missing ID parameter' });
+        }
+
         let token = APIHelper.getAccessToken();
 
         // Auto refresh before expiry
@@ -115,15 +127,21 @@ const APIHelper = {
                         if (refresh) {
                             try {
                                 await APIHelper.refreshToken();
-                                options.isRetry = true;
-                                const result = await APIHelper.request(options);
-                                resolve(result);
-                                return;
                             } catch (refreshErr) {
+                                console.error("Token refresh failed on 401, logging out:", refreshErr);
                                 APIHelper.logoutRedirect();
                                 reject(refreshErr);
                                 return;
                             }
+                            // Retry the request after successful token refresh
+                            try {
+                                options.isRetry = true;
+                                const result = await APIHelper.request(options);
+                                resolve(result);
+                            } catch (retryErr) {
+                                reject(retryErr);
+                            }
+                            return;
                         } else {
                             APIHelper.logoutRedirect();
                         }
@@ -190,19 +208,13 @@ const APIHelper = {
     },
 
     logout: () => {
-        return APIHelper.request({
-            url: '/auth/logout',
-            type: 'POST',
-            skipRefreshCheck: true
-        }).always(() => {
-            APIHelper.clearSession();
-            Navigation.navigateToLogin();
-        });
+        APIHelper.clearSession();
+        window.location.replace('../index.html');
     },
 
     logoutRedirect: () => {
         APIHelper.clearSession();
-        Navigation.navigateToLogin();
+        window.location.replace('../index.html');
     },
 
     getProfile: () => {
@@ -567,6 +579,10 @@ const APIHelper = {
         return APIHelper.request({ url: '/doctor/me', type: 'GET' });
     },
 
+    getMyDoctorProfile: () => {
+        return APIHelper.request({ url: '/doctor/me', type: 'GET' });
+    },
+
     getPatientMe: () => {
         return APIHelper.request({ url: '/patient/me', type: 'GET' });
     }
@@ -577,9 +593,6 @@ const ProfileManager = {
         const email = APIHelper.getUserEmail();
         const role = APIHelper.getUserRole();
         
-        console.log("Email:", email);
-        console.log("Role:", role);
-
         if (role !== 'DOCTOR') {
             console.log("Role is not DOCTOR. Skipping doctor profile initialization.");
             return null;
@@ -587,11 +600,20 @@ const ProfileManager = {
 
         try {
             console.log("Calling GET /doctor/me to fetch doctor profile...");
-            const doctor = await APIHelper.getDoctorMe();
-            console.log("Doctor Profile:", doctor);
+            const doctor = await APIHelper.getMyDoctorProfile();
+            console.log("Email:", email);
+            console.log("Doctor:", doctor);
             
             if (doctor && doctor.id) {
                 localStorage.setItem('profileId', doctor.id);
+                try {
+                    const user = await APIHelper.getProfile();
+                    if (user && user.id) {
+                        localStorage.setItem('userId', user.id);
+                    }
+                } catch (userErr) {
+                    console.error("Failed to retrieve userId for doctor:", userErr);
+                }
                 console.log("Profile ID:", doctor.id);
                 return doctor;
             } else {
@@ -623,6 +645,15 @@ const ProfileManager = {
             
             if (patient && patient.id) {
                 localStorage.setItem('profileId', patient.id);
+                localStorage.setItem('patientId', patient.id);
+                if (patient.user && patient.user.id) {
+                    localStorage.setItem('userId', patient.user.id);
+                } else {
+                    const user = await APIHelper.getProfile();
+                    if (user && user.id) {
+                        localStorage.setItem('userId', user.id);
+                    }
+                }
                 console.log("Profile ID (Patient):", patient.id);
                 return patient;
             } else {
@@ -631,6 +662,43 @@ const ProfileManager = {
             }
         } catch (err) {
             console.error("Error in initializePatientProfile:", err);
+            return null;
+        }
+    },
+
+    initializeReceptionistProfile: async () => {
+        const email = APIHelper.getUserEmail();
+        const role = APIHelper.getUserRole();
+        
+        console.log("Email:", email);
+        console.log("Role:", role);
+
+        if (role !== 'RECEPTIONIST') {
+            console.log("Role is not RECEPTIONIST. Skipping receptionist profile initialization.");
+            return null;
+        }
+
+        try {
+            const user = await APIHelper.getProfile();
+            if (user && user.id) {
+                localStorage.setItem('userId', user.id);
+            }
+
+            console.log("Calling GET /receptionist/all to fetch receptionist profile...");
+            const receptionists = await APIHelper.getAllReceptionists();
+            console.log("All Receptionists:", receptionists);
+
+            const receptionist = receptionists.find(r => r.user && r.user.email === email);
+            if (receptionist && receptionist.id) {
+                localStorage.setItem('profileId', receptionist.id);
+                console.log("Profile ID (Receptionist):", receptionist.id);
+                return receptionist;
+            } else {
+                console.error("Receptionist profile matching email not found.");
+                return null;
+            }
+        } catch (err) {
+            console.error("Error in initializeReceptionistProfile:", err);
             return null;
         }
     }

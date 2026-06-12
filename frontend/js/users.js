@@ -1,3 +1,7 @@
+function requireAuth() {
+    return AuthGuard.check();
+}
+
 // Users & Profiles Management Script
 const UsersManager = {
     currentTab: 'DOCTOR', // DOCTOR, PATIENT, RECEPTIONIST
@@ -6,6 +10,9 @@ const UsersManager = {
     receptionistsList: [],
 
     init: () => {
+          if (!requireAuth()) {
+                return;
+            }
         const role = APIHelper.getUserRole();
         
         // Tab switching events
@@ -115,6 +122,7 @@ const UsersManager = {
             $('#doctors-table-body').html(html);
         }).catch(err => {
             showToast('Failed to load doctors list', 'danger');
+            $('#doctors-table-body').html(`<tr><td colspan="7" class="text-center text-danger">Failed to load doctors list. Please contact administrator.</td></tr>`);
         });
     },
 
@@ -149,6 +157,7 @@ const UsersManager = {
             $('#patients-table-body').html(html);
         }).catch(err => {
             showToast('Failed to load patients list', 'danger');
+            $('#patients-table-body').html(`<tr><td colspan="7" class="text-center text-danger">Failed to load patients list. Please contact administrator.</td></tr>`);
         });
     },
 
@@ -180,6 +189,7 @@ const UsersManager = {
             $('#receptionists-table-body').html(html);
         }).catch(err => {
             showToast('Failed to load receptionists list', 'danger');
+            $('#receptionists-table-body').html(`<tr><td colspan="5" class="text-center text-danger">Failed to load receptionists list. Please contact administrator.</td></tr>`);
         });
     },
 
@@ -404,6 +414,10 @@ function autoInitializeProfile(user) {
 }
 
 $(document).ready(function() {
+    if (!AuthGuard.check()) {
+        return;
+    }
+
     if ($('#doctors-table-body').length) {
         UsersManager.init();
     }

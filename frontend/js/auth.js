@@ -1,14 +1,7 @@
 // Auth helper script
 const Auth = {
     requireAuth: () => {
-        const token = APIHelper.getAccessToken();
-        const role = APIHelper.getUserRole();
-        if (!token || !role) {
-            APIHelper.clearSession();
-            Navigation.navigateToLogin();
-            return false;
-        }
-        return true;
+        return AuthGuard.check();
     },
 
     requireRole: (allowedRoles) => {
@@ -158,13 +151,71 @@ const Auth = {
     }
 };
 
-$(document).ready(function() {
-    // Debug logging during startup
-    console.log('Current role:', APIHelper.getUserRole());
-    console.log('Current email:', APIHelper.getUserEmail());
-    console.log('Current path:', window.location.pathname);
+$(document).ready(async function() {
+    const role = APIHelper.getUserRole();
+    const email = APIHelper.getUserEmail();
+    const profileId = localStorage.getItem('profileId');
+    const token = APIHelper.getAccessToken();
+
+    console.log("Role:", role);
+    console.log("Email:", email);
+    console.log("Profile ID:", profileId);
+    console.log("Page:", window.location.pathname);
 
     Auth.checkAccess();
     Auth.initLogin();
     Auth.initSignup();
+
+    // Centralized Auto-Recovery Logic
+    if (token && role) {
+        if (!profileId || profileId === 'null' || profileId === 'undefined') {
+            console.log(`[Auto-Recovery] profileId is missing for role ${role}. Fetching...`);
+            if (role === 'DOCTOR') {
+                await ProfileManager.initializeDoctorProfile();
+            } else if (role === 'PATIENT') {
+                await ProfileManager.initializePatientProfile();
+            } else if (role === 'RECEPTIONIST') {
+                await ProfileManager.initializeReceptionistProfile();
+            }
+        }
+        
+        let userId = localStorage.getItem('userId');
+        if (!userId || userId === 'null' || userId === 'undefined') {
+            try {
+                const user = await APIHelper.getProfile();
+                if (user && user.id) {
+                    localStorage.setItem('userId', user.id);
+                }
+            } catch (err) {
+                console.error("[Auto-Recovery] Failed to fetch user profile for userId:", err);
+            }
+        }
+    }
+});
+
+const AuthGuard = {
+    check: () => {
+        const token = localStorage.getItem('accessToken');
+        const role = localStorage.getItem('role');
+        const email = localStorage.getItem('email');
+
+        if (!token || !role || !email) {
+            localStorage.clear();
+            window.location.replace('../index.html');
+            return false;
+        }
+
+        return true;
+    }
+};
+
+window.addEventListener('pageshow', function() {
+    const path = window.location.pathname;
+    const filename = path.substring(path.lastIndexOf('/') + 1);
+
+    if (filename !== 'index.html' && path !== '/' && !path.endsWith('/') && filename !== '') {
+        if (!localStorage.getItem('accessToken')) {
+            window.location.replace('../index.html');
+        }
+    }
 });

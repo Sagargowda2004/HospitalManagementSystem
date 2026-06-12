@@ -132,6 +132,10 @@
     
     <!-- We will write medical-records and prescriptions js inside app code or separate files -->
     <script>
+        function requireAuth() {
+            return AuthGuard.check();
+        }
+
         // Inline code or simple binding to handle Medical Records
         const MedicalRecords = {
             list: [],
@@ -139,6 +143,9 @@
             appointments: [],
 
             init: () => {
+                if (!requireAuth()) {
+                  return;
+                }
                 const role = APIHelper.getUserRole();
                 if (role === 'DOCTOR') {
                     $('#doctor-add-record-btn').show();
@@ -184,22 +191,71 @@
                 });
             },
 
-            loadReferences: () => {
-                const role = APIHelper.getUserRole();
-                
-                // Fetch patients & appointments reference
-                return Promise.all([
-                    APIHelper.getAllPatients().then(pats => { MedicalRecords.patients = pats; }),
-                    APIHelper.getAppointments().then(apps => { MedicalRecords.appointments = apps; })
-                ]).then(() => {
-                    // Populate patients dropdown
-                    let html = '<option value="" disabled selected>Select Patient</option>';
-                    MedicalRecords.patients.forEach(p => {
-                        html += `<option value="${p.id}">${p.user ? p.user.name : 'Unknown'} (ID: ${p.id})</option>`;
-                    });
-                    $('#record-patient-select').html(html);
-                });
-            },
+           loadReferences: async () => {
+
+    const role = APIHelper.getUserRole();
+
+    try {
+
+        if (role === 'ADMIN') {
+
+            const [patients, appointments] = await Promise.all([
+                APIHelper.getAllPatients(),
+                APIHelper.getAppointments()
+            ]);
+
+            MedicalRecords.patients = patients;
+            MedicalRecords.appointments = appointments;
+
+        } else if (role === 'DOCTOR') {
+
+            const doctorId = localStorage.getItem('profileId');
+
+            if (!doctorId) {
+                console.error("Doctor profileId missing");
+                return;
+            }
+
+            // DO NOT call patient/all
+            MedicalRecords.patients = [];
+
+            MedicalRecords.appointments =
+                await APIHelper.getDoctorAppointments(doctorId);
+
+        } else if (role === 'PATIENT') {
+
+            const patientId =
+                localStorage.getItem('profileId');
+
+            MedicalRecords.patients = [];
+
+            MedicalRecords.appointments =
+                await APIHelper.getPatientAppointments(patientId);
+
+        }
+
+        let html =
+            '<option value="" disabled selected>Select Patient</option>';
+
+        MedicalRecords.patients.forEach(p => {
+            html += `
+                <option value="${p.id}">
+                    ${p.user ? p.user.name : 'Unknown'}
+                </option>
+            `;
+        });
+
+        $('#record-patient-select').html(html);
+
+    } catch(err) {
+
+        console.error(
+            "Failed to load references",
+            err
+        );
+
+    }
+},
 
             populateAppointmentsForPatient: (patientId) => {
                 // Filter appointments for the selected patient
@@ -219,13 +275,13 @@
                 console.log("Email:", APIHelper.getUserEmail());
                 console.log("Role:", role);
 
-                if (role === 'DOCTOR' && (!profileId || profileId === 'null')) {
+                if (role === 'DOCTOR' && (!profileId || profileId === 'null' || profileId === 'undefined')) {
                     console.log("Profile ID missing for Doctor in medical records. Initializing...");
                     const doc = await ProfileManager.initializeDoctorProfile();
                     if (doc) {
                         profileId = doc.id;
                     }
-                } else if (role === 'PATIENT' && (!profileId || profileId === 'null')) {
+                } else if (role === 'PATIENT' && (!profileId || profileId === 'null' || profileId === 'undefined')) {
                     console.log("Profile ID missing for Patient in medical records. Initializing...");
                     const patient = await ProfileManager.initializePatientProfile();
                     if (patient) {
@@ -240,7 +296,7 @@
                 if (role === 'ADMIN') {
                     loadPromise = APIHelper.getMedicalRecords();
                 } else if (role === 'DOCTOR') {
-                    if (!profileId || profileId === 'null') {
+                    if (!profileId || profileId === 'null' || profileId === 'undefined') {
                         showToast("Doctor profile not found", "danger");
                         $('#medical-records-list-container').html(`
                             <div class="card text-center text-danger" style="padding: 20px;">
@@ -251,7 +307,7 @@
                     }
                     loadPromise = APIHelper.getDoctorMedicalRecords(profileId);
                 } else if (role === 'PATIENT') {
-                    if (!profileId || profileId === 'null') {
+                    if (!profileId || profileId === 'null' || profileId === 'undefined') {
                         showToast("Patient profile not found", "danger");
                         $('#medical-records-list-container').html(`
                             <div class="card text-center text-danger" style="padding: 20px;">
@@ -410,12 +466,12 @@
                 const treatment = $('#record-treatment').val().trim();
                 const notes = $('#record-notes').val().trim();
 
-                if (role === 'DOCTOR' && (!doctorId || doctorId === 'null')) {
+                if (role === 'DOCTOR' && (!doctorId || doctorId === 'null' || doctorId === 'undefined')) {
                     showToast('Doctor profile not found. Cannot save record.', 'danger');
                     return;
                 }
 
-                if (!patientId || !appointmentId || !bp || !temp || !hr || !weight || !height || !diagnosis || !treatment) {
+                if (!patientId || patientId === 'null' || patientId === 'undefined' || !appointmentId || appointmentId === 'null' || appointmentId === 'undefined' || !bp || !temp || !hr || !weight || !height || !diagnosis || !treatment) {
                     showToast('Please fill out all required fields', 'danger');
                     return;
                 }
@@ -468,6 +524,10 @@
         };
 
         $(document).ready(function() {
+            if (!AuthGuard.check()) {
+                return;
+            }
+
             MedicalRecords.init();
         });
     </script>

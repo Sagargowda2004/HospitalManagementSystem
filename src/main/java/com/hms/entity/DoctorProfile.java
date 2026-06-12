@@ -12,13 +12,17 @@ public class DoctorProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "user_id",
+            nullable = false,
+            unique = true
+    )
     private User user;
 
     private String specialization;
 
     private int experience;
 
-    private String availability;  // e.g., 10 AM - 5 PM
+    private String availability; // e.g., 10 AM - 5 PM
 }

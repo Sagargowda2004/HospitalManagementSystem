@@ -1,3 +1,7 @@
+function requireAuth() {
+    return AuthGuard.check();
+}
+
 // Appointments Controller Script
 const Appointments = {
     list: [],
@@ -6,6 +10,9 @@ const Appointments = {
     patients: [],
 
     init: () => {
+         if (!requireAuth()) {
+                return;
+            }
         const role = APIHelper.getUserRole();
         const profileId = localStorage.getItem('profileId');
 
@@ -45,42 +52,99 @@ const Appointments = {
         });
     },
 
-    loadReferences: () => {
-        const role = APIHelper.getUserRole();
-        const promises = [
-            APIHelper.getAllDoctors().then(docs => { Appointments.doctors = docs; }),
-            APIHelper.getActiveDepartments().then(depts => { Appointments.departments = depts; })
-        ];
+ loadReferences: () => {
+     const role = APIHelper.getUserRole();
 
-        if (role === 'ADMIN' || role === 'RECEPTIONIST') {
-            promises.push(APIHelper.getAllPatients().then(pats => { Appointments.patients = pats; }));
-        }
+     const promises = [
+         APIHelper.getActiveDepartments().then(depts => {
+             Appointments.departments = depts;
+         }).catch(() => {
+             Appointments.departments = [];
+         })
+     ];
 
-        return Promise.all(promises).then(() => {
-            // Populate dropdown selectors in form
-            let deptHtml = '<option value="" disabled selected>Select Department</option>';
-            Appointments.departments.forEach(d => {
-                deptHtml += `<option value="${d.id}">${d.name}</option>`;
-            });
-            $('#app-dept-select').html(deptHtml);
+     // Only ADMIN and RECEPTIONIST need all doctors/patients
+     if (role === 'ADMIN' || role === 'RECEPTIONIST') {
 
-            let docHtml = '<option value="" disabled selected>Select Practitioner</option>';
-            Appointments.doctors.forEach(d => {
-                const name = d.user ? d.user.name : 'Unknown Doctor';
-                docHtml += `<option value="${d.id}">Dr. ${name} (${d.specialization})</option>`;
-            });
-            $('#app-doc-select').html(docHtml);
+         promises.push(
+             APIHelper.getAllDoctors().then(docs => {
+                 Appointments.doctors = docs;
+             }).catch(() => {
+                 Appointments.doctors = [];
+             })
+         );
 
-            if (role === 'ADMIN' || role === 'RECEPTIONIST') {
-                let patHtml = '<option value="" disabled selected>Select Patient</option>';
-                Appointments.patients.forEach(p => {
-                    const name = p.user ? p.user.name : 'Unknown Patient';
-                    patHtml += `<option value="${p.id}">${name} (ID: ${p.id})</option>`;
-                });
-                $('#app-patient-select').html(patHtml);
-            }
-        });
-    },
+         promises.push(
+             APIHelper.getAllPatients().then(pats => {
+                 Appointments.patients = pats;
+             }).catch(() => {
+                 Appointments.patients = [];
+             })
+         );
+     } else {
+         // DOCTOR / PATIENT
+         Appointments.doctors = [];
+         Appointments.patients = [];
+     }
+
+     return Promise.all(promises).then(() => {
+
+         // Department dropdown
+         let deptHtml =
+             '<option value="" disabled selected>Select Department</option>';
+
+         Appointments.departments.forEach(d => {
+             deptHtml += `
+                 <option value="${d.id}">
+                     ${d.name}
+                 </option>
+             `;
+         });
+
+         $('#app-dept-select').html(deptHtml);
+
+         // Doctor dropdown (only ADMIN / RECEPTIONIST)
+         if (role === 'ADMIN' || role === 'RECEPTIONIST') {
+
+             let docHtml =
+                 '<option value="" disabled selected>Select Practitioner</option>';
+
+             Appointments.doctors.forEach(d => {
+                 const name = d.user
+                     ? d.user.name
+                     : 'Unknown Doctor';
+
+                 docHtml += `
+                     <option value="${d.id}">
+                         Dr. ${name} (${d.specialization || 'General'})
+                     </option>
+                 `;
+             });
+
+             $('#app-doc-select').html(docHtml);
+
+             let patHtml =
+                 '<option value="" disabled selected>Select Patient</option>';
+
+             Appointments.patients.forEach(p => {
+                 const name = p.user
+                     ? p.user.name
+                     : 'Unknown Patient';
+
+                 patHtml += `
+                     <option value="${p.id}">
+                         ${name} (ID: ${p.id})
+                     </option>
+                 `;
+             });
+
+             $('#app-patient-select').html(patHtml);
+         }
+
+     }).catch(err => {
+         console.error('Failed to load appointment references:', err);
+     });
+ },
 
     loadAppointmentsTable: async () => {
         $('#appointments-table-body').html(`<tr><td colspan="7" class="text-center"><div class="spinner" style="margin: 20px auto;"></div></td></tr>`);
@@ -91,13 +155,13 @@ const Appointments = {
         console.log("Email:", APIHelper.getUserEmail());
         console.log("Role:", role);
 
-        if (role === 'DOCTOR' && (!profileId || profileId === 'null')) {
+        if (role === 'DOCTOR' && (!profileId || profileId === 'null' || profileId === 'undefined')) {
             console.log("Profile ID missing for Doctor in appointments list. Initializing...");
             const doc = await ProfileManager.initializeDoctorProfile();
             if (doc) {
                 profileId = doc.id;
             }
-        } else if (role === 'PATIENT' && (!profileId || profileId === 'null')) {
+        } else if (role === 'PATIENT' && (!profileId || profileId === 'null' || profileId === 'undefined')) {
             console.log("Profile ID missing for Patient in appointments list. Initializing...");
             const patient = await ProfileManager.initializePatientProfile();
             if (patient) {
@@ -112,14 +176,14 @@ const Appointments = {
         if (role === 'ADMIN') {
             loadPromise = APIHelper.getAppointments();
         } else if (role === 'DOCTOR') {
-            if (!profileId || profileId === 'null') {
+            if (!profileId || profileId === 'null' || profileId === 'undefined') {
                 showToast("Doctor profile not found", "danger");
                 $('#appointments-table-body').html(`<tr><td colspan="7" class="text-center text-danger">Doctor profile not found. Please contact administrator.</td></tr>`);
                 return;
             }
             loadPromise = APIHelper.getDoctorAppointments(profileId);
         } else if (role === 'PATIENT') {
-            if (!profileId || profileId === 'null') {
+            if (!profileId || profileId === 'null' || profileId === 'undefined') {
                 showToast("Patient profile not found", "danger");
                 $('#appointments-table-body').html(`<tr><td colspan="7" class="text-center text-danger">Patient profile not found. Please contact receptionist.</td></tr>`);
                 return;
@@ -263,7 +327,7 @@ const Appointments = {
         const reason = $('#app-reason').val().trim();
         const notes = $('#app-notes').val().trim();
 
-        if (!patientId || patientId === 'null' || !deptId || !docId || !appointmentDate || !reason) {
+        if (!patientId || patientId === 'null' || patientId === 'undefined' || !deptId || !docId || !appointmentDate || !reason) {
             showToast('Please fill out all required fields', 'danger');
             return;
         }
@@ -317,6 +381,10 @@ const Appointments = {
 };
 
 $(document).ready(function() {
+    if (!AuthGuard.check()) {
+        return;
+    }
+
     if ($('#appointments-table-body').length) {
         Appointments.init();
     }

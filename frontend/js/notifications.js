@@ -1,9 +1,15 @@
+function requireAuth() {
+    return AuthGuard.check();
+}
 // Notifications Management Controller Script
 const Notifications = {
     list: [],
     patients: [],
 
     init: () => {
+          if (!requireAuth()) {
+                 return;
+             }
         // Change form inputs based on delivery channel selected
         $('#notify-type').on('change', function() {
             const channel = $(this).val();
@@ -43,18 +49,28 @@ const Notifications = {
         });
     },
 
-    loadReferences: () => {
-        return APIHelper.getAllPatients().then(pats => {
-            Notifications.patients = pats;
-            let html = '<option value="" disabled selected>Select Recipient</option>';
-            pats.forEach(p => {
-                html += `<option value="${p.id}">${p.user ? p.user.name : 'Unknown'} (ID: ${p.id})</option>`;
-            });
-            $('#notify-user-select').html(html);
-        }).catch(err => {
-            console.error("Failed to load patient targets: ", err);
-        });
-    },
+  loadReferences: () => {
+
+      const role = APIHelper.getUserRole();
+
+      // Only ADMIN and RECEPTIONIST can send notifications
+      if (role !== 'ADMIN' && role !== 'RECEPTIONIST') {
+          Notifications.patients = [];
+          return Promise.resolve();
+      }
+
+      return APIHelper.getAllPatients()
+          .then(pats => {
+              Notifications.patients = pats;
+          })
+          .catch(err => {
+              console.error(
+                  "Failed to load patient targets:",
+                  err
+              );
+              Notifications.patients = [];
+          });
+  },
 
     loadNotificationsLogs: () => {
         $('#notifications-table-body').html(`<tr><td colspan="4" class="text-center"><div class="spinner" style="margin:20px auto;"></div></td></tr>`);
@@ -65,13 +81,40 @@ const Notifications = {
 
         if (role === 'ADMIN') {
             loadPromise = APIHelper.getNotifications();
-        } else if (role === 'DOCTOR') {
-            loadPromise = APIHelper.getNotifications(); // Doctors view all notification history
-        } else if (role === 'PATIENT') {
-            // Patient user details stored on me
-            loadPromise = APIHelper.getProfile().then(user => {
-                return APIHelper.getUserNotifications(user.id);
-            });
+        }  else if (role === 'DOCTOR') {
+
+              const userId = localStorage.getItem('userId');
+
+              if (userId && userId !== 'null' && userId !== 'undefined') {
+
+                  loadPromise =
+                      APIHelper.getUserNotifications(userId);
+
+              } else {
+
+                  loadPromise = APIHelper.getProfile().then(user => {
+
+                      localStorage.setItem(
+                          'userId',
+                          user.id
+                      );
+
+                      return APIHelper.getUserNotifications(
+                          user.id
+                      );
+                  });
+              }
+
+          } else if (role === 'PATIENT') {
+            const userId = localStorage.getItem('userId');
+            if (userId && userId !== 'null' && userId !== 'undefined') {
+                loadPromise = APIHelper.getUserNotifications(userId);
+            } else {
+                loadPromise = APIHelper.getProfile().then(user => {
+                    localStorage.setItem('userId', user.id);
+                    return APIHelper.getUserNotifications(user.id);
+                });
+            }
         } else {
             loadPromise = APIHelper.getNotifications();
         }
@@ -81,6 +124,7 @@ const Notifications = {
             Notifications.renderTable(res);
         }).catch(err => {
             showToast('Failed to load logs', 'danger');
+            $('#notifications-table-body').html(`<tr><td colspan="4" class="text-center text-danger">Failed to load notification logs. Please try again.</td></tr>`);
         });
     },
 
@@ -173,6 +217,10 @@ const Notifications = {
 };
 
 $(document).ready(function() {
+    if (!AuthGuard.check()) {
+        return;
+    }
+
     if ($('#notifications-table-body').length) {
         Notifications.init();
     }
