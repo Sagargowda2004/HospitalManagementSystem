@@ -216,11 +216,19 @@
                 return;
             }
 
-            // DO NOT call patient/all
-            MedicalRecords.patients = [];
-
             MedicalRecords.appointments =
                 await APIHelper.getDoctorAppointments(doctorId);
+
+            const patientMap = new Map();
+            MedicalRecords.appointments.forEach(a => {
+                if (a.patientId && !patientMap.has(a.patientId)) {
+                    patientMap.set(a.patientId, {
+                        id: a.patientId,
+                        user: { name: a.patientName || `Patient #${a.patientId}` }
+                    });
+                }
+            });
+            MedicalRecords.patients = Array.from(patientMap.values());
 
         } else if (role === 'PATIENT') {
 

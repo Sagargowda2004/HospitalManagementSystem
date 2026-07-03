@@ -251,8 +251,16 @@
                     doctorId
                 );
 
-            // avoid admin API
-            Prescriptions.patients = [];
+            const patientMap = new Map();
+            Prescriptions.records.forEach(r => {
+                if (r.patientId && !patientMap.has(r.patientId)) {
+                    patientMap.set(r.patientId, {
+                        id: r.patientId,
+                        user: { name: r.patientName || `Patient #${r.patientId}` }
+                    });
+                }
+            });
+            Prescriptions.patients = Array.from(patientMap.values());
 
         } else if (role === 'PATIENT') {
 

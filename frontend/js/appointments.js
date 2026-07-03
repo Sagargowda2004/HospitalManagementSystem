@@ -63,83 +63,87 @@ const Appointments = {
          })
      ];
 
-     // Only ADMIN and RECEPTIONIST need all doctors/patients
-     if (role === 'ADMIN' || role === 'RECEPTIONIST') {
+      // Only ADMIN, RECEPTIONIST and PATIENT need all doctors. Only ADMIN and RECEPTIONIST need patients.
+      if (role === 'ADMIN' || role === 'RECEPTIONIST' || role === 'PATIENT') {
+          promises.push(
+              APIHelper.getAllDoctors().then(docs => {
+                  Appointments.doctors = docs;
+              }).catch(() => {
+                  Appointments.doctors = [];
+              })
+          );
+      } else {
+          Appointments.doctors = [];
+      }
 
-         promises.push(
-             APIHelper.getAllDoctors().then(docs => {
-                 Appointments.doctors = docs;
-             }).catch(() => {
-                 Appointments.doctors = [];
-             })
-         );
+      if (role === 'ADMIN' || role === 'RECEPTIONIST') {
+          promises.push(
+              APIHelper.getAllPatients().then(pats => {
+                  Appointments.patients = pats;
+              }).catch(() => {
+                  Appointments.patients = [];
+              })
+          );
+      } else {
+          Appointments.patients = [];
+      }
 
-         promises.push(
-             APIHelper.getAllPatients().then(pats => {
-                 Appointments.patients = pats;
-             }).catch(() => {
-                 Appointments.patients = [];
-             })
-         );
-     } else {
-         // DOCTOR / PATIENT
-         Appointments.doctors = [];
-         Appointments.patients = [];
-     }
+      return Promise.all(promises).then(() => {
 
-     return Promise.all(promises).then(() => {
+          // Department dropdown
+          let deptHtml =
+              '<option value="" disabled selected>Select Department</option>';
 
-         // Department dropdown
-         let deptHtml =
-             '<option value="" disabled selected>Select Department</option>';
+          Appointments.departments.forEach(d => {
+              deptHtml += `
+                  <option value="${d.id}">
+                      ${d.name}
+                  </option>
+              `;
+          });
 
-         Appointments.departments.forEach(d => {
-             deptHtml += `
-                 <option value="${d.id}">
-                     ${d.name}
-                 </option>
-             `;
-         });
+          $('#app-dept-select').html(deptHtml);
 
-         $('#app-dept-select').html(deptHtml);
+          // Doctor dropdown (for ADMIN, RECEPTIONIST, and PATIENT)
+          if (role === 'ADMIN' || role === 'RECEPTIONIST' || role === 'PATIENT') {
 
-         // Doctor dropdown (only ADMIN / RECEPTIONIST)
-         if (role === 'ADMIN' || role === 'RECEPTIONIST') {
+              let docHtml =
+                  '<option value="" disabled selected>Select Practitioner</option>';
 
-             let docHtml =
-                 '<option value="" disabled selected>Select Practitioner</option>';
+              Appointments.doctors.forEach(d => {
+                  const name = d.user
+                      ? d.user.name
+                      : 'Unknown Doctor';
 
-             Appointments.doctors.forEach(d => {
-                 const name = d.user
-                     ? d.user.name
-                     : 'Unknown Doctor';
+                  docHtml += `
+                      <option value="${d.id}">
+                          Dr. ${name} (${d.specialization || 'General'})
+                      </option>
+                  `;
+              });
 
-                 docHtml += `
-                     <option value="${d.id}">
-                         Dr. ${name} (${d.specialization || 'General'})
-                     </option>
-                 `;
-             });
+              $('#app-doc-select').html(docHtml);
+          }
 
-             $('#app-doc-select').html(docHtml);
+          // Patient dropdown (only ADMIN / RECEPTIONIST)
+          if (role === 'ADMIN' || role === 'RECEPTIONIST') {
+              let patHtml =
+                  '<option value="" disabled selected>Select Patient</option>';
 
-             let patHtml =
-                 '<option value="" disabled selected>Select Patient</option>';
+              Appointments.patients.forEach(p => {
+                  const name = p.user
+                      ? p.user.name
+                      : 'Unknown Patient';
 
-             Appointments.patients.forEach(p => {
-                 const name = p.user
-                     ? p.user.name
-                     : 'Unknown Patient';
+                  patHtml += `
+                      <option value="${p.id}">
+                          ${name} (ID: ${p.id})
+                      </option>
+                  `;
+              });
 
-                 patHtml += `
-                     <option value="${p.id}">
-                         ${name} (ID: ${p.id})
-                     </option>
-                 `;
-             });
-
-             $('#app-patient-select').html(patHtml);
-         }
+              $('#app-patient-select').html(patHtml);
+          }
 
      }).catch(err => {
          console.error('Failed to load appointment references:', err);
