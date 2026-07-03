@@ -64,7 +64,7 @@ public class DoctorController {
         return ResponseEntity.ok(resp);
     }
 
-    @PreAuthorize("hasAnyAuthority('ADMIN','DOCTOR')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','DOCTOR','RECEPTIONIST','PATIENT')")
     @GetMapping("/all")
     public List<DoctorProfile> getAllDoctors() {
         return service.getAllDoctors();

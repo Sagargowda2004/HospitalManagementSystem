@@ -19,7 +19,7 @@ public class NotificationController {
     private NotificationService notificationService;
     
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST')")
     public ResponseEntity<?> sendNotification(@RequestBody NotificationDTO notificationDTO) {
         try {
             NotificationDTO sentNotification = notificationService.sendNotification(notificationDTO);
@@ -32,7 +32,7 @@ public class NotificationController {
     }
     
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT', 'RECEPTIONIST')")
     public ResponseEntity<?> getNotificationById(@PathVariable Long id) {
         try {
             NotificationDTO notification = notificationService.getNotificationById(id);
@@ -45,7 +45,7 @@ public class NotificationController {
     }
     
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT', 'RECEPTIONIST')")
     public ResponseEntity<?> getNotificationsByUser(@PathVariable Long userId) {
         try {
             List<NotificationDTO> notifications = notificationService.getNotificationsByUser(userId);
@@ -58,7 +58,7 @@ public class NotificationController {
     }
     
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getNotificationsByStatus(@PathVariable String status) {
         try {
             List<NotificationDTO> notifications = notificationService.getNotificationsByStatus(status);
@@ -71,7 +71,7 @@ public class NotificationController {
     }
     
     @GetMapping("/type/{type}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getNotificationsByType(@PathVariable String type) {
         try {
             List<NotificationDTO> notifications = notificationService.getNotificationsByType(type);
@@ -84,14 +84,14 @@ public class NotificationController {
     }
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getAllNotifications() {
         List<NotificationDTO> notifications = notificationService.getAllNotifications();
         return ResponseEntity.ok(notifications);
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> deleteNotification(@PathVariable Long id) {
         try {
             notificationService.deleteNotification(id);

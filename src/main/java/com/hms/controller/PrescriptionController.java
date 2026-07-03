@@ -19,7 +19,7 @@ public class PrescriptionController {
     private PrescriptionService prescriptionService;
     
     @PostMapping
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<?> createPrescription(@RequestBody PrescriptionDTO prescriptionDTO) {
         try {
             PrescriptionDTO createdPrescription = prescriptionService.createPrescription(prescriptionDTO);
@@ -32,7 +32,7 @@ public class PrescriptionController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<?> updatePrescription(@PathVariable Long id, @RequestBody PrescriptionDTO prescriptionDTO) {
         try {
             PrescriptionDTO updatedPrescription = prescriptionService.updatePrescription(id, prescriptionDTO);
@@ -104,7 +104,7 @@ public class PrescriptionController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<?> deletePrescription(@PathVariable Long id) {
         try {
             prescriptionService.deletePrescription(id);

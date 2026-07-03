@@ -19,7 +19,7 @@ public class BillController {
     private BillService billService;
     
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> createBill(@RequestBody BillDTO billDTO) {
         try {
             BillDTO createdBill = billService.createBill(billDTO);
@@ -32,7 +32,7 @@ public class BillController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> updateBill(@PathVariable Long id, @RequestBody BillDTO billDTO) {
         try {
             BillDTO updatedBill = billService.updateBill(id, billDTO);
@@ -45,7 +45,7 @@ public class BillController {
     }
     
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT', 'RECEPTIONIST')")
     public ResponseEntity<?> getBillById(@PathVariable Long id) {
         try {
             BillDTO bill = billService.getBillById(id);
@@ -58,7 +58,7 @@ public class BillController {
     }
     
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT', 'RECEPTIONIST')")
     public ResponseEntity<?> getBillsByPatient(@PathVariable Long patientId) {
         try {
             List<BillDTO> bills = billService.getBillsByPatient(patientId);
@@ -71,7 +71,7 @@ public class BillController {
     }
     
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getBillsByStatus(@PathVariable String status) {
         try {
             List<BillDTO> bills = billService.getBillsByStatus(status);
@@ -84,14 +84,14 @@ public class BillController {
     }
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getAllBills() {
         List<BillDTO> bills = billService.getAllBills();
         return ResponseEntity.ok(bills);
     }
     
     @PatchMapping("/{id}/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> updateBillStatus(@PathVariable Long id, @PathVariable String status) {
         try {
             BillDTO updatedBill = billService.updateBillStatus(id, status);
@@ -104,7 +104,7 @@ public class BillController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> deleteBill(@PathVariable Long id) {
         try {
             billService.deleteBill(id);

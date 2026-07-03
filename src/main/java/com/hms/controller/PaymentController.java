@@ -19,7 +19,7 @@ public class PaymentController {
     private PaymentService paymentService;
     
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT', 'RECEPTIONIST')")
     public ResponseEntity<?> createPayment(@RequestBody PaymentDTO paymentDTO) {
         try {
             PaymentDTO createdPayment = paymentService.createPayment(paymentDTO);
@@ -32,7 +32,7 @@ public class PaymentController {
     }
     
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT', 'RECEPTIONIST')")
     public ResponseEntity<?> getPaymentById(@PathVariable Long id) {
         try {
             PaymentDTO payment = paymentService.getPaymentById(id);
@@ -45,7 +45,7 @@ public class PaymentController {
     }
     
     @GetMapping("/bill/{billId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT', 'RECEPTIONIST')")
     public ResponseEntity<?> getPaymentsByBill(@PathVariable Long billId) {
         try {
             List<PaymentDTO> payments = paymentService.getPaymentsByBill(billId);
@@ -58,7 +58,7 @@ public class PaymentController {
     }
     
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getPaymentsByStatus(@PathVariable String status) {
         try {
             List<PaymentDTO> payments = paymentService.getPaymentsByStatus(status);
@@ -71,14 +71,14 @@ public class PaymentController {
     }
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getAllPayments() {
         List<PaymentDTO> payments = paymentService.getAllPayments();
         return ResponseEntity.ok(payments);
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> deletePayment(@PathVariable Long id) {
         try {
             paymentService.deletePayment(id);

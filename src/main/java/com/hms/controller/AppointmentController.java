@@ -19,7 +19,7 @@ public class AppointmentController {
     private AppointmentService appointmentService;
     
     @PostMapping
-    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> createAppointment(@RequestBody AppointmentDTO appointmentDTO) {
         try {
             AppointmentDTO createdAppointment = appointmentService.createAppointment(appointmentDTO);
@@ -32,7 +32,7 @@ public class AppointmentController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> updateAppointment(@PathVariable Long id, @RequestBody AppointmentDTO appointmentDTO) {
         try {
             AppointmentDTO updatedAppointment = appointmentService.updateAppointment(id, appointmentDTO);
@@ -45,7 +45,7 @@ public class AppointmentController {
     }
     
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getAppointmentById(@PathVariable Long id) {
         try {
             AppointmentDTO appointment = appointmentService.getAppointmentById(id);
@@ -58,7 +58,7 @@ public class AppointmentController {
     }
     
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getAppointmentsByPatient(@PathVariable Long patientId) {
         try {
             List<AppointmentDTO> appointments = appointmentService.getAppointmentsByPatient(patientId);
@@ -71,7 +71,7 @@ public class AppointmentController {
     }
     
     @GetMapping("/doctor/{doctorId}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getAppointmentsByDoctor(@PathVariable Long doctorId) {
         try {
             List<AppointmentDTO> appointments = appointmentService.getAppointmentsByDoctor(doctorId);
@@ -84,7 +84,7 @@ public class AppointmentController {
     }
     
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getAppointmentsByStatus(@PathVariable String status) {
         try {
             List<AppointmentDTO> appointments = appointmentService.getAppointmentsByStatus(status);
@@ -97,14 +97,14 @@ public class AppointmentController {
     }
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> getAllAppointments() {
         List<AppointmentDTO> appointments = appointmentService.getAllAppointments();
         return ResponseEntity.ok(appointments);
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN', 'RECEPTIONIST')")
     public ResponseEntity<?> deleteAppointment(@PathVariable Long id) {
         try {
             appointmentService.deleteAppointment(id);
